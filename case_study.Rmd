@@ -1,0 +1,112 @@
+---
+title: "Labeling Data With Appropriate Confidence"
+output:
+  tufte::tufte_html:
+    toc: true
+    toc_depth: 1
+    
+citation_package: natbib
+bibliography: ["Annotation Models - project Bob.bib", packages.bib]
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+packages <- c("ggplot2", "gridExtra", "knitr", "reshape", "rstan",
+              "tufte")
+lapply(packages, library, character.only = TRUE)
+ knitr::write_bib(c(
+   .packages(), packages), 'packages.bib')
+
+options(htmltools.dir.version = FALSE)
+options(digits = 2)
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+knitr::opts_chunk$set(comment = "")
+rstan_options(auto_write = TRUE)
+# options(mc.cores = parallel::detectCores(logical = FALSE))
+ggtheme_tufte <- function() {
+  theme(plot.background =
+          element_rect(fill = "#fffff8",
+                       colour = "#fffff8",
+                       size = 0.5,
+                       linetype = "solid"),
+        plot.margin=unit(c(1, 1, 0.5, 0.5), "lines"),
+        panel.background =
+          element_rect(fill = "#fffff8",
+                       colour = "#fffff8",
+                       size = 0.5,
+                       linetype = "solid"),
+        panel.grid.major = element_line(colour = "white", size = 1, linetype="dashed"),
+          # blank(),
+        panel.grid.minor = element_blank(),
+        legend.box.background =
+          element_rect(fill = "#fffff8",
+                       colour = "#fffff8",
+                       linetype = "solid"),
+        axis.ticks = element_blank(),
+        axis.text = element_text(family = "Palatino", size = 16),
+        axis.title.x = element_text(family = "Palatino", size = 20,
+                                    margin = margin(t = 15, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(family = "Palatino", size = 18,
+                                    margin = margin(t = 0, r = 15, b = 0, l = 0)),
+        strip.background = element_rect(fill = "#fffff8",
+                                        colour = "#fffff8",
+                                        linetype = "solid"),
+        strip.text = element_text(family = "Palatino", size = 16),
+        legend.text = element_text(family = "Palatino", size = 16),
+        legend.title = element_text(family = "Palatino", size = 16,
+                                    margin = margin(b = 5)),
+        legend.background = element_rect(fill = "#fffff8",
+                                        colour = "#fffff8",
+                                        linetype = "solid"),
+        legend.key = element_rect(fill = "#fffff8",
+                                        colour = "#fffff8",
+                                        linetype = "solid")
+  )
+}
+
+```
+
+
+## Introduction
+
+
+<!-- `r margin_note("")` -->
+
+```{marginfigure}
+<i>Introduction Outline</i>: <br>
+  * Annotation models <br><br>
+  * Latent truths <br><br>
+  * Relate to other field, e.g. cultural consensus theory, medicine <br><br>
+  * Goal of golden standards with uncertainty <br><br>
+  * This provides great benefit over majority voting, see literature <br><br>
+  * Moreover, if we can obtain golden standard labels with appropriate uncertainty this can be a step towards machine learning with appropriate uncertainty in the labels on which we train our models.<br><br>
+  * We start this case study with Model proposed by Dawid and Skene and compare the usage of EM-algorithm (taken from ..) and the Bayesian model (taken from ..).<br><br>
+``` 
+
+In this case study we will discuss models of annotation. Annotation is concerned with producing gold standard labels and alternatively referred to as coding, rating, grading, tagging, or labeling. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing (NLP) [@paun_comparing_2019], Medicine (refs, radiology examples), Sociology (?, I refer to Cultural consensus theory) [@oravecz_bayesian_2014], Item Response Theory (IRT) [@karabatsos_markov_2003], or to produce labels that can be used in a supervised learning setting [@paun_comparing_2019].
+
+The common setting is that we have $J$ annotators which produce labels for (a subset of) $I$ items which have $K$ possible categories. In total there are $N$ annotations. We assume that the true class ($c$) (aka. true label, grounded truth, answer key, golden standard) is unknown. There exist class prevalence's ($\pi$), annotators have abilities ($\beta$) and items have a difficulty ($\theta$). The $K$ categories can be dichotomous or polytomous, with a nominal or ordinal scale. The items can be allowed to have continuous scales too, yet for now we restrict ourselves to the categorical case. 
+
+The most simple and straightforward way to define a golden standard would be to use a majority voting scheme in which for each item $i \in \{1,2,...,I \}$ the label is taken that was chosen by the majority of the annotators. Majority voting and the associated judgments regarding annotators have been shown to be inferior to model based approaches [@paun_comparing_2019]. We therefore start this case study with the model proposed by @dawid_maximum_1979 that allows model based estimation of golden standard labels and associated annotator biases. Note that this model does not include item difficulty estimation. We compare their original approach, using an EM algorithm, to using a full Bayesian model. We analyze the original data from the @dawid_maximum_1979 paper and conduct a simulation study to investigate systematically which approach leads to more accurate results. 
+
+
+## Case study
+
+### Dawid and Skene model
+
+
+### Data from Dawid and Skene
+The case study of @dawid_maximum_1979 concerns the pre-operative assessment of patient fitness to undergo general anesthetics. 45 patients are assesed and rated on a 1 to 4 scale such that $I = 45$ and $K = 4$. There are five annotators, four of which rate each patient once, and one of which annotates each patient three time, as such $J = 5$ and $N = 315$. As a simple consensus could not be found on the basis of the ratings for each patient^[Visual representation of the data from @dawid_maximum_1979.].
+
+
+
+
+
+## Session information
+```{r}
+sessionInfo()
+```
+
+## References
+
+ 
