@@ -5,8 +5,8 @@ library(parallel)
 library(doParallel)
 library(bayesplot)
 library(tcltk)
-model <- stan_model("SIMULATIONs/MODELS/estimation_logistic_step.stan")
-gen_model <- stan_model("SIMULATIONs/MODELS/generation_logistic_step.stan")
+model <- stan_model("SIMULATIONs/MODELS/estimation_raykar_full_model.stan")
+gen_model <- stan_model("SIMULATIONs/MODELS/generation_raykar.stan")
 detectCores()
 no_cores <- detectCores() - 2
 cl <- makeCluster(no_cores)
@@ -61,23 +61,28 @@ warm.init <- 1000
 reps <- 200
 bins <- 9
 
-prior.sample <- sampling(gen_model, data = list(x = sim.data$x,
-                                                I = sim.data$I,
-                                                I_mis = sim.data$I_mis,
-                                                N = sim.data$N,
-                                                D = sim.data$D,
-                                                ii = sim.data$ii,
-                                                ii_mis = sim.data$ii_mis),
-                         algorithm = "Fixed_param",
+prior.sample <- sampling(object = gen_model, data = list(J = sim.data$J,
+                                                         I = sim.data$I,
+                                                         I_mis = sim.data$I_mis,
+                                                         D = sim.data$D,
+                                                         N = sim.data$N,
+                                                         x = sim.data$x,
+                                                         ii = sim.data$ii,
+                                                         ii_mis = sim.data$ii_mis,
+                                                         jj = sim.data$jj),
                          seed = 25032019, chains = 1,
-                         warmup = 0, iter = reps)
+                         warmup = 0, iter = reps, algorithm = "Fixed_param")
+
 
 prior.w0 <- extract(prior.sample, pars = "w0")$'w0'
 prior.w <- extract(prior.sample, pars = "w")$'w'
+prior.alpha <- extract(prior.sample, pars = "alpha")$'alpha'
+prior.beta <- extract(prior.sample, pars = "beta")$'beta'
+prior.z <- extract(prior.sample, pars = "z")$'z'
 prior.data <- extract(prior.sample, pars = "y")$'y'
 
 finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"), 
-                        .export = c("sim.data", "bins", "warm.init", 
+                        .export = c("sim.data", "bins", "warm.init", "prior.beta", "prior.alpha",
                                     "prior.w0", "prior.w", "prior.data", "reps"),
                         .combine = rbind,
                         .verbose = TRUE) %dopar% {
@@ -87,11 +92,16 @@ finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"),
                           
                           w_init <- rnorm(sim.data$D)
                           w0_init <- rnorm(1)
+                          alpha_init <- rep(.8, sim.data$J)
+                          beta_init <- rep(.8, sim.data$J)
                           
                           init_fun <- function(n) {
-                            list(w = w_init,
+                            list(alpha = alpha_init,
+                                 beta = beta_init,
+                                 w = w_init,
                                  w0 = w0_init)
                           }
+                          
                           
                           thin <- 1
                           draws <- bins
@@ -129,17 +139,26 @@ finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"),
                           
                           fit.w0 <- extract(fit, pars = "w0")$'w0'
                           fit.w <- extract(fit, pars = "w")$'w'
+                          fit.alpha <- extract(fit, pars = "alpha")$'alpha'
+                          fit.beta <- extract(fit, pars = "beta")$'beta'
                           
                           fit.w0 <- fit.w0[(1:bins) * thin]
                           fit.w <- fit.w[(1:bins) * thin, ]
+                          fit.alpha <- fit.alpha[(1:bins) * thin, ]
+                          fit.beta <- fit.beta[(1:bins) * thin, ]
                           
-                          tempMatrix <- matrix(NA, ncol = (1 + sim.data$D), nrow = 1)
+                          tempMatrix <- matrix(NA, ncol = (sim.data$J + sim.data$J + 1 + sim.data$D), nrow = 1)
                           
-                          tempMatrix[1, 1] <- sum(fit.w0 < prior.w0[i])
+                          for(j in 1:sim.data$J) {
+                            tempMatrix[1, j] <- sum(fit.alpha[, j] < prior.alpha[i, j])
+                            tempMatrix[1, sim.data$J + j] <- sum(fit.beta[, j] < prior.beta[i, j])
+                          }
+                          
+                          tempMatrix[1, (sim.data$J + sim.data$J) + 1] <- sum(fit.w0 < prior.w0[i])
                           
                           if(sim.data$D > 0){
                             for(d in 1:sim.data$D) {
-                              tempMatrix[1, 1 + d] <- sum(fit.w[, d] < prior.w[i, d])
+                              tempMatrix[1, (sim.data$J + sim.data$J + 1) + d] <- sum(fit.w[, d] < prior.w[i, d])
                             }
                           }
                           
@@ -147,14 +166,16 @@ finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"),
                           
                         }
 
-rank.w0 <- finalMatrix[, 1]
-rank.w <- finalMatrix[, 2:(1 + sim.data$D)]
+rank.alpha <- finalMatrix[, 1:sim.data$J]
+rank.beta <- finalMatrix[, (sim.data$J + 1):(sim.data$J + sim.data$J)]
+rank.w0 <- finalMatrix[, (sim.data$J + sim.data$J + 1)]
+rank.w <- finalMatrix[, (sim.data$J + sim.data$J + 1 + 1):(sim.data$J + sim.data$J + 1 + sim.data$D)]
 
-
-pdf(paste0("SIMULATIONS/RESULTS/FIGURES/logistic_regression", 
+pdf(paste0("SIMULATIONS/RESULTS/FIGURES/raykar_full", 
            "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
            "missing", sim.data$missing * 100, 
            "Bins", bins, "replications", reps, "_ggplot.pdf"))
+
 
 par(mfrow = c(1, 1))
 plot(NA, xlim = c(0, 5), ylim = c(0, 6), bty = 'n',
@@ -166,21 +187,29 @@ text(1, 2, paste0("D = ", sim.data$D), pos = 4)
 text(1, 1, paste0("missing = ", sim.data$missing * 100, "%"), pos = 4)
 points(rep(1,4),1:4, pch=15)
 
+for(j in 1:sim.data$J){
+  a <- sbc_rank(rank.alpha[, j], reps = reps, bins = bins + 1, title = paste0("Sensitivity ", j))
+  b <- sbc_rank(rank.beta[, j], reps = reps, bins = bins + 1, title = paste0("Specificity ", j))
+  gridExtra::grid.arrange(a, b, ncol = 2) 
+}
+
 sbc_rank(rank.w0, reps = reps, bins = bins + 1, title = "Intercept")
 
 for(d in 1:sim.data$D){
   print(sbc_rank(rank.w[, d], reps = reps, bins = bins + 1, title = paste0("Predictor ", d)))
 }
 
+
+
 dev.off()
 
-save.image(paste0("SIMULATIONS/RESULTS/IMAGES/logistic_regression", 
+save.image(paste0("SIMULATIONS/RESULTS/IMAGES/raykar_full", 
                   "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
                   "missing", sim.data$missing * 100, 
                   "Bins", bins, "replications", reps, ".rdata"))
 
 writeLines(capture.output(sessionInfo()), 
-           paste0("SIMULATIONS/RESULTS/SESSIONINFO/logistic_regression", 
+           paste0("SIMULATIONS/RESULTS/SESSIONINFO/raykar_full", 
                   "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
                   "missing", sim.data$missing * 100, 
                   "Bins", bins, "replications", reps, ".txt"))
