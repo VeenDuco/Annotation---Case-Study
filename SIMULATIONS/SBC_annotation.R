@@ -30,6 +30,7 @@
 source("SIMULATIONS/SCRIPTS/SBC_raykar_reduced_to_Dawid_Skene.r")
 
 source("SIMULATIONS/SCRIPTS/SBC_logistic_regression_second_step.r")
+# source("SIMULATIONS/SCRIPTS/SBC_logistic_regression_second_step_N_equals_I_data.r")
 
 source("SIMULATIONS/SCRIPTS/SBC_raykar_full_model.r")
 
