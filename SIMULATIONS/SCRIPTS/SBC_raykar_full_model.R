@@ -78,7 +78,6 @@ prior.w0 <- extract(prior.sample, pars = "w0")$'w0'
 prior.w <- extract(prior.sample, pars = "w")$'w'
 prior.alpha <- extract(prior.sample, pars = "alpha")$'alpha'
 prior.beta <- extract(prior.sample, pars = "beta")$'beta'
-prior.z <- extract(prior.sample, pars = "z")$'z'
 prior.data <- extract(prior.sample, pars = "y")$'y'
 
 finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"), 

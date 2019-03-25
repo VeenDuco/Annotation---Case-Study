@@ -27,10 +27,12 @@
 # joint model (2.).
 
 
-
+source("SIMULATIONS/SCRIPTS/SBC_raykar_reduced_to_Dawid_Skene.r")
 
 source("SIMULATIONS/SCRIPTS/SBC_logistic_regression_second_step.r")
 
 source("SIMULATIONS/SCRIPTS/SBC_raykar_full_model.r")
+
+source("SIMULATIONS/SCRIPTS/SBC_raykar_two_step_model.r")
 
 writeLines(capture.output(sessionInfo()), "SIMULATIONS/sessionInfo.txt")
