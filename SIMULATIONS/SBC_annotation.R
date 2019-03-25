@@ -25,3 +25,8 @@
 # the linear regression.
 # Thereafter we look at the calibration of the two-step model (1.) and the 
 # joint model (2.).
+
+
+
+
+source("SIMULATIONS/SCRIPTS/SBC_logistic_regression_second_step.r")
