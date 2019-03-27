@@ -8,7 +8,7 @@ library(tcltk)
 model <- stan_model("SIMULATIONs/MODELS/estimation_logistic_step.stan")
 gen_model <- stan_model("SIMULATIONs/MODELS/generation_logistic_step.stan")
 detectCores()
-no_cores <- detectCores() - 2
+no_cores <- detectCores() - 1
 cl <- makeCluster(no_cores)
 registerDoParallel(cl)
 # define functions
@@ -58,8 +58,8 @@ sim.data <- data_structure(J = 10,
                            missing = .5)
 
 warm.init <- 1000
-reps <- 200
-bins <- 9
+reps <- 3000
+bins <- 19
 
 prior.sample <- sampling(gen_model, data = list(x = sim.data$x,
                                                 I = sim.data$I,
@@ -178,6 +178,12 @@ save.image(paste0("SIMULATIONS/RESULTS/IMAGES/logistic_regression",
                   "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
                   "missing", sim.data$missing * 100, 
                   "Bins", bins, "replications", reps, ".rdata"))
+
+saveRDS(finalMatrix, paste0("SIMULATIONS/RESULTS/finalMatrixRDS/logistic_regression", 
+                            "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
+                            "missing", sim.data$missing * 100, 
+                            "Bins", bins, "replications", reps, ".rds"))
+
 
 writeLines(capture.output(sessionInfo()), 
            paste0("SIMULATIONS/RESULTS/SESSIONINFO/logistic_regression", 

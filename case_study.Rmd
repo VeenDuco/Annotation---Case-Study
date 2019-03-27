@@ -1,5 +1,5 @@
 ---
-title: "Labeling Data With Appropriate Confidence"
+title: "Learning From Crowds: Fully Bayesian and Fully Calibrated"
 output:
   tufte::tufte_html:
     toc: true
@@ -11,64 +11,46 @@ bibliography: ["Annotation Models - project Bob.bib", packages.bib]
 
 ```{r setup, include=FALSE, echo=FALSE}
 packages <- c("ggplot2", "gridExtra", "knitr", "reshape", "rstan",
-              "tufte")
+              "tufte", "cowplot", "bayesplot")
 lapply(packages, library, character.only = TRUE)
  knitr::write_bib(c(
    .packages(), packages), 'packages.bib')
 
 options(htmltools.dir.version = FALSE)
 options(digits = 2)
+knitr::opts_chunk$set(echo = FALSE) # hides everything from chunks but output
 knitr::opts_chunk$set(cache = FALSE)
 knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
 knitr::opts_chunk$set(comment = "")
 rstan_options(auto_write = TRUE)
 # options(mc.cores = parallel::detectCores(logical = FALSE))
-ggtheme_tufte <- function() {
-  theme(plot.background =
-          element_rect(fill = "#fffff8",
-                       colour = "#fffff8",
-                       size = 0.5,
-                       linetype = "solid"),
-        plot.margin=unit(c(1, 1, 0.5, 0.5), "lines"),
-        panel.background =
-          element_rect(fill = "#fffff8",
-                       colour = "#fffff8",
-                       size = 0.5,
-                       linetype = "solid"),
-        panel.grid.major = element_line(colour = "white", size = 1, linetype="dashed"),
-          # blank(),
-        panel.grid.minor = element_blank(),
-        legend.box.background =
-          element_rect(fill = "#fffff8",
-                       colour = "#fffff8",
-                       linetype = "solid"),
-        axis.ticks = element_blank(),
-        axis.text = element_text(family = "Palatino", size = 16),
-        axis.title.x = element_text(family = "Palatino", size = 20,
-                                    margin = margin(t = 15, r = 0, b = 0, l = 0)),
-        axis.title.y = element_text(family = "Palatino", size = 18,
-                                    margin = margin(t = 0, r = 15, b = 0, l = 0)),
-        strip.background = element_rect(fill = "#fffff8",
-                                        colour = "#fffff8",
-                                        linetype = "solid"),
-        strip.text = element_text(family = "Palatino", size = 16),
-        legend.text = element_text(family = "Palatino", size = 16),
-        legend.title = element_text(family = "Palatino", size = 16,
-                                    margin = margin(b = 5)),
-        legend.background = element_rect(fill = "#fffff8",
-                                        colour = "#fffff8",
-                                        linetype = "solid"),
-        legend.key = element_rect(fill = "#fffff8",
-                                        colour = "#fffff8",
-                                        linetype = "solid")
-  )
-}
-
+source("SIMULATIONS/FUNCTIONS/sbc_rank_hist.r")
+source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 ```
 
 
 ## Introduction
 
+
+```{r, include = FALSE}
+
+finalMatrix <- readRDS(paste0("SIMULATIONS/RESULTS/finalMatrixRDS/",
+                              "logistic_regressionI100J10D10missing50Bins19replications3000.rds"))
+plotList <- apply(finalMatrix, 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = max(finalMatrix) + 1)
+
+n <- length(plotList)
+nCol <- floor(sqrt(n))
+# do.call("grid.arrange", c(plotList, ncol=nCol, 
+#                           top = "SBC logistic regression for Intercept and 10 predictors")) 
+g <- do.call("grid.arrange", c(plotList, ncol=nCol, 
+                               top = "SBC logistic regression for Intercept and 10 predictors"))
+```
+
+````{r}
+g2 <- cowplot::ggdraw(g) + ggtheme_tufte()
+plot(g2)
+
+```
 
 <!-- `r margin_note("")` -->
 
