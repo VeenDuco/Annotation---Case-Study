@@ -29,7 +29,43 @@ source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 ```
 
 
-## Introduction
+<!-- notes: -->
+<!--  - for annotation examples look at paper from e.g. david blei, image recognition problems. -->
+
+## Abstract {-}
+
+<hr>
+
+In this case study we will discuss models of annotation. Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Medicine (refs, radiology examples), Sociology (?, I refer to Cultural consensus theory) [@oravecz_bayesian_2014], Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. The common setting is that we have $J$ annotators which produce labels for (a subset of) $I$ items which have $K$ possible categories. This results in $\textbf{Y}$, a corpus of observed annotations. We are interested in figuring out the true classes [^2] ($\textbf{Z}$) for the items, either because we want to determine a course of action based on the true class (e.g. in Medicine based on a diagnosis) or we want to relate predictors ($\textbf{X}$) to the true classes. 
+
+A corpus of annotations usually contain inconsistent labels for items across annotators, and, sometimes even inconsistent labels for items from the same annotator that labels the item multiple times. It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014]. 
+
+ - Paragraph to preview what is to come. 
+ - we shall discuss a fully Bayesian way to: 
+   - Incorporate annotator ability ($\theta$) in determination of $\textbf{Z}$
+   - Relate $\textbf{X}$ to $\textbf{Z}$ 
+   - Do all of this in a propperly calibrated way
+   
+<!-- In this case study we consider a fully Bayesian model that allows the incorporation of annotator abilities ($\theta$) in the determiniation of $p(z_i = k)$ such that we get $p(z | y, \theta)$. Moreover, we want to consider a fully Bayesian models that propperly  -->
+
+[^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
+[^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
+
+<hr>
+# Calibration
+
+  - We care about uncertainty and not only about point estimates.
+  - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
+  - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study. 
+
+<hr>
+# Annotation model
+
+
+
+<hr>
+<hr>
+
 
 
 ```{r, include = FALSE}
@@ -53,7 +89,7 @@ plot(g2)
 ```
 
 <!-- `r margin_note("")` -->
-
+<!--
 ```{marginfigure}
 <i>Introduction Outline</i>: <br>
   * Annotation models <br><br>
@@ -64,23 +100,7 @@ plot(g2)
   * Moreover, if we can obtain golden standard labels with appropriate uncertainty this can be a step towards machine learning with appropriate uncertainty in the labels on which we train our models.<br><br>
   * We start this case study with Model proposed by Dawid and Skene and compare the usage of EM-algorithm (taken from ..) and the Bayesian model (taken from ..).<br><br>
 ``` 
-
-In this case study we will discuss models of annotation. Annotation is concerned with producing gold standard labels and alternatively referred to as coding, rating, grading, tagging, or labeling. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing (NLP) [@paun_comparing_2019], Medicine (refs, radiology examples), Sociology (?, I refer to Cultural consensus theory) [@oravecz_bayesian_2014], Item Response Theory (IRT) [@karabatsos_markov_2003], or to produce labels that can be used in a supervised learning setting [@paun_comparing_2019].
-
-The common setting is that we have $J$ annotators which produce labels for (a subset of) $I$ items which have $K$ possible categories. In total there are $N$ annotations. We assume that the true class ($c$) (aka. true label, grounded truth, answer key, golden standard) is unknown. There exist class prevalence's ($\pi$), annotators have abilities ($\beta$) and items have a difficulty ($\theta$). The $K$ categories can be dichotomous or polytomous, with a nominal or ordinal scale. The items can be allowed to have continuous scales too, yet for now we restrict ourselves to the categorical case. 
-
-The most simple and straightforward way to define a golden standard would be to use a majority voting scheme in which for each item $i \in \{1,2,...,I \}$ the label is taken that was chosen by the majority of the annotators. Majority voting and the associated judgments regarding annotators have been shown to be inferior to model based approaches [@paun_comparing_2019]. We therefore start this case study with the model proposed by @dawid_maximum_1979 that allows model based estimation of golden standard labels and associated annotator biases. Note that this model does not include item difficulty estimation. We compare their original approach, using an EM algorithm, to using a full Bayesian model. We analyze the original data from the @dawid_maximum_1979 paper and conduct a simulation study to investigate systematically which approach leads to more accurate results. 
-
-
-## Case study
-
-### Dawid and Skene model
-
-
-### Data from Dawid and Skene
-The case study of @dawid_maximum_1979 concerns the pre-operative assessment of patient fitness to undergo general anesthetics. 45 patients are assesed and rated on a 1 to 4 scale such that $I = 45$ and $K = 4$. There are five annotators, four of which rate each patient once, and one of which annotates each patient three time, as such $J = 5$ and $N = 315$. As a simple consensus could not be found on the basis of the ratings for each patient^[Visual representation of the data from @dawid_maximum_1979.].
-
-
+-->
 
 
 
