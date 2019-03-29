@@ -3,7 +3,7 @@ title: "Learning From Crowds: Fully Bayesian and Fully Calibrated"
 output:
   tufte::tufte_html:
     toc: true
-    toc_depth: 1
+    toc_depth: 2
     
 citation_package: natbib
 bibliography: ["Annotation Models - project Bob.bib", packages.bib]
@@ -35,33 +35,141 @@ source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 ## Abstract {-}
 
 <hr>
+# Introduction 
 
+## Annotation 
 In this case study we will discuss models of annotation. Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Medicine (refs, radiology examples), Sociology (?, I refer to Cultural consensus theory) [@oravecz_bayesian_2014], Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. The common setting is that we have $J$ annotators which produce labels for (a subset of) $I$ items which have $K$ possible categories. This results in $\textbf{Y}$, a corpus of observed annotations. We are interested in figuring out the true classes [^2] ($\textbf{Z}$) for the items, either because we want to determine a course of action based on the true class (e.g. in Medicine based on a diagnosis) or we want to relate predictors ($\textbf{X}$) to the true classes. 
 
-A corpus of annotations usually contain inconsistent labels for items across annotators, and, sometimes even inconsistent labels for items from the same annotator that labels the item multiple times. It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014]. 
+A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes even inconsistent labels for items from the same annotator that labels the item multiple times. It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014]. 
 
- - Paragraph to preview what is to come. 
- - we shall discuss a fully Bayesian way to: 
    - Incorporate annotator ability ($\theta$) in determination of $\textbf{Z}$
-   - Relate $\textbf{X}$ to $\textbf{Z}$ 
-   - Do all of this in a propperly calibrated way
-   
-<!-- In this case study we consider a fully Bayesian model that allows the incorporation of annotator abilities ($\theta$) in the determiniation of $p(z_i = k)$ such that we get $p(z | y, \theta)$. Moreover, we want to consider a fully Bayesian models that propperly  -->
 
 [^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
 [^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
 
+## Classification 
+   - Relate $\textbf{X}$ to $\textbf{Z}$ 
+
+## Calibration
+   - Do all of this in a propperly calibrated way
+   - We care about uncertainty and not only about point estimates.
+   - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
+   - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study. 
+
+
 <hr>
-# Calibration
 
-  - We care about uncertainty and not only about point estimates.
-  - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
-  - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study. 
+# Modelling
+
+## Annotation
+
+### Model description
+
+Assume that we have $J$ annotators which produce annotations for (a subset of) $I$ items so we have a total of $N$ annotations that have $K$ possible labels, which we retrict to $K=2$ here for simplicity. This results in a corpus of annotations $\textbf{y}$ for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene [-@dawid_maximum_1979] such that 
+$$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
+$$z_i \sim bernoulli(\pi)$$
+$$\theta_j = (\alpha_j, \beta_j)$$
+where $z_i$ is the true label for item $i$, $\pi = p(z_i = 1)$ [^?], $\alpha_j$ is the annotator sensitivity or the true positive rate such that $\alpha_j = p(y_{ij} = 1 | z_i = 1)$ and $\beta_j$ is the annotator specificity or true negative rate such that $\beta_j = p(y_{ij} = 0 | z_i = 0)$. In the case where we have no additional item information $\pi$ is equal for all $i$ or alternatively stated
+$$\pi = logit^{-1}(w_0).$$
+
+### stan code
+
+```{stan, eval = FALSE, output.var="Annotation_only", echo = TRUE}
+data {
+  int<lower=0> I;
+  int<lower=0> J;
+  int<lower=0> N;
+  int<lower=0,upper=1> y[N];  
+  int<lower=1> ii[N];         
+  int<lower=1> jj[N];         
+}
+parameters {
+  real w0; 
+  vector<lower=0.1,upper=1>[J] alpha;   
+  vector<lower=0.1,upper=1>[J] beta;  
+}
+
+model {
+  vector[I] logit_z_hat;
+  vector[I] log_z_hat; 
+  vector[I] log1m_z_hat;
+
+  vector[J] log_alpha;
+  vector[J] log1m_alpha;
+  vector[J] log_beta;
+  vector[J] log1m_beta;
+
+  logit_z_hat = rep_vector(w0, I);
+
+  for (i in 1:I) {
+    log_z_hat[i] = log_inv_logit(logit_z_hat[i]);
+    log1m_z_hat[i] = log1m_inv_logit(logit_z_hat[i]);
+  }
+
+  for (j in 1:J) {
+    log_alpha[j] = log(alpha[j]);
+    log1m_alpha[j] = log1m(alpha[j]);
+    log_beta[j] = log(beta[j]);
+    log1m_beta[j] = log1m(beta[j]);
+  }
+
+  w0 ~ normal(0,5);
+  alpha ~ beta(10,1);
+  beta ~ beta(10,1);
+
+  for (n in 1:N){
+    real pos_sum;
+    real neg_sum;
+    pos_sum = log_z_hat[ii[n]];
+    neg_sum = log1m_z_hat[ii[n]];
+    if (y[n] == 1) {
+        pos_sum = pos_sum + log_alpha[jj[n]];
+        neg_sum = neg_sum + log1m_beta[jj[n]];
+      } else {
+        pos_sum = pos_sum + log1m_alpha[jj[n]];
+        neg_sum = neg_sum + log_beta[jj[n]];
+      }
+      target += log_sum_exp(pos_sum, neg_sum);
+  }
+
+}
+
+```
+
+### Calibration
+
+
+[^?]: *can I state it like this?*
+
+
 
 <hr>
-# Annotation model
+## Classification
 
+$$z_i \sim bernoulli(\pi)$$
+$$\pi_i = logit^{-1}(w^T X_i)$$
 
+<hr>
+## Joint model
+
+$$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
+$$z_i \sim bernoulli(\pi)$$
+$$\theta_j = (\alpha_j, \beta_j)$$
+$$\pi_i = logit^{-1}(w^T X_i)$$
+
+<hr>
+# Concequences of seperation
+
+Imagine a process in which we collect a lot of annotations, via for instance Amazon Mechanical Turk. We "clean" the data so that from all these noisy annotations we get probability based golden standard labels for each item. By this point we are doing better than using majority voting and we create a nice data set with golden standard labels and predictors for all of the items. This data set is then later used to train a classification model once we are intereseted in this data again. We found previously that the joint model is propperly calibrated, but let's look at what happens if we seperate the annotation and the classification problem into two destinct and seperate parts.
+
+Our model becomes: 
+$$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
+$$z_i \sim bernoulli(\pi)$$
+$$\pi = logit^{-1}(w_0)$$
+$$\theta_j = (\alpha_j, \beta_j)$$
+$$z^*_i = \mathcal{I}[z_i > .5]$$
+$$z^*_i \sim bernoulli(\hat{\pi})$$
+$$\hat{\pi}_i = logit^{-1}(w^T X_n)$$
 
 <hr>
 <hr>
