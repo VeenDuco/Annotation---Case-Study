@@ -32,38 +32,33 @@ source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 <!-- notes: -->
 <!--  - for annotation examples look at paper from e.g. david blei, image recognition problems. -->
 
-## Abstract {-}
+<!-- ## Abstract {-} -->
 
 <hr>
-# Introduction 
+## Introduction
+In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard. 
 
-## Annotation 
-In this case study we will discuss models of annotation. Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Medicine (refs, radiology examples), Sociology (?, I refer to Cultural consensus theory) [@oravecz_bayesian_2014], Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. The common setting is that we have $J$ annotators which produce labels for (a subset of) $I$ items which have $K$ possible categories. This results in $\textbf{Y}$, a corpus of observed annotations. We are interested in figuring out the true classes [^2] ($\textbf{Z}$) for the items, either because we want to determine a course of action based on the true class (e.g. in Medicine based on a diagnosis) or we want to relate predictors ($\textbf{X}$) to the true classes. 
+Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Sociology (e.g. Cultural consensus theory; @oravecz_bayesian_2014), Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes inconsistent labels for items from the same annotator that labels the item multiple times. We are interested in figuring out the true classes [^2] for the items. 
 
-A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes even inconsistent labels for items from the same annotator that labels the item multiple times. It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014]. 
+It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014], which we consider a desirable property for our models. In this case study we use the annotation model of @dawid_maximum_1979 to obtain estimates of annotator sensitivity (true positive rate) and specificity (true negative rate) and true class probabilities. The model of @dawid_maximum_1979 is easily extended to incorporate joint estimation of a classification scheme as shown in @raykar_learning_2010. In contrast to @raykar_learning_2010 we do not use posterior mode estimates, we do a full Bayesian inference and are interested in the calibrartion of our posterior distributions. 
 
-   - Incorporate annotator ability ($\theta$) in determination of $\textbf{Z}$
 
-[^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
-[^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
-
-## Classification 
-   - Relate $\textbf{X}$ to $\textbf{Z}$ 
-
-## Calibration
-   - Do all of this in a propperly calibrated way
+## Calibration 
+SECTION ON CALIBRATION.. 
    - We care about uncertainty and not only about point estimates.
    - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
    - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study. 
 
+In the following we first show that both the annotation model of @dawid_maximum_1979 and the logistics regression that we use for the classification are propperly calibrated, seperately, and, jointly. Thereafter, we show that if you produce a dataset with predictors and golden standard labels based on the annotation model initially and only later run a classification model, you will produce posterior distirbutions that are under-dispersed. 
+
+
+[^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
+[^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
+
 
 <hr>
 
-# Modelling
-
-## Annotation
-
-### Model description
+## Annotation Calibration
 
 Assume that we have $J$ annotators which produce annotations for (a subset of) $I$ items so we have a total of $N$ annotations that have $K$ possible labels, which we retrict to $K=2$ here for simplicity. This results in a corpus of annotations $\textbf{y}$ for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene [-@dawid_maximum_1979] such that 
 $$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
@@ -338,6 +333,11 @@ z_star <- ifelse(summary(fit, pars = "E_z")$summary[, 1] < 0.5, 0, 1)
 Thereafter we can fit the classification model with $\textbf{z}^*$.
 
 <hr>
+
+# Conclusion / Take Home Message
+
+If you have a corpus of annotations do not "clean-up" this data set by producing golden standard labels. If you care about coverage of your parameters at all model the classification and annotation jointly and propagate your uncertainty throughout. 
+
 <hr>
 
 
