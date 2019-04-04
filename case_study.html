@@ -49,9 +49,9 @@ if (window.hljs) {
 <div id="TOC">
 <ul>
 <li><a href="#abstract">Abstract</a></li>
-<li><a href="#introduction">Introduction</a></li>
-<li><a href="#annotation-calibration">Annotation Calibration</a></li>
-<li><a href="#classification">Classification</a></li>
+<li><a href="#annotations">Annotations</a></li>
+<li><a href="#calibration">Calibration</a></li>
+<li><a href="#simulation">Simulation</a></li>
 <li><a href="#joint-model">Joint model</a></li>
 <li><a href="#concequences-of-seperation">Concequences of seperation</a></li>
 <li><a href="#conclusion-take-home-message">Conclusion / Take Home Message</a><ul>
@@ -65,20 +65,30 @@ if (window.hljs) {
 <!--  - for annotation examples look at paper from e.g. david blei, image recognition problems. -->
 <div id="abstract" class="section level2 unnumbered">
 <h2>Abstract</h2>
+<p>In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard.</p>
 <hr>
 </div>
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
-<p>In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard.</p>
+<div id="annotations" class="section level2">
+<h2>Annotations</h2>
 <p>Annotation is concerned with producing gold standard labels.<label for="tufte-sn-1" class="margin-toggle sidenote-number">1</label><input type="checkbox" id="tufte-sn-1" class="margin-toggle"><span class="sidenote"><span class="sidenote-number">1</span> Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.</span> The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing <span class="citation">(Paun et al. 2019)</span>, Sociology (e.g. Cultural consensus theory; <span class="citation">Oravecz, Vandekerckhove, and Batchelder (2014)</span>), Item Response Theory <span class="citation">(Karabatsos and Batchelder 2003)</span>, or to produce labels that can be used in supervised learning <span class="citation">(Raykar et al. 2010)</span>. A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes inconsistent labels for items from the same annotator that labels the item multiple times. We are interested in figuring out the true classes<label for="tufte-sn-2" class="margin-toggle sidenote-number">2</label><input type="checkbox" id="tufte-sn-2" class="margin-toggle"><span class="sidenote"><span class="sidenote-number">2</span> The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.</span> for the items.</p>
 <p>It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items <span class="citation">(Paun et al. 2019)</span>. Additionaly, traditional measures of annotator agreement such as Cohen’s <span class="math inline">\(\kappa\)</span> and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree <span class="citation">(Passonneau and Carpenter 2014)</span>, which we consider a desirable property for our models. In this case study we use the annotation model of <span class="citation">Dawid and Skene (1979)</span> to obtain estimates of annotator sensitivity (true positive rate) and specificity (true negative rate) and true class probabilities. The model of <span class="citation">Dawid and Skene (1979)</span> is easily extended to incorporate joint estimation of a classification scheme as shown in <span class="citation">Raykar et al. (2010)</span>. In contrast to <span class="citation">Raykar et al. (2010)</span> we do not use posterior mode estimates, we do a full Bayesian inference and are interested in the calibrartion of our posterior distributions.</p>
-<p>PARAGRAPH ON CALIBRATION.. - We care about uncertainty and not only about point estimates. - Assumption that we want propperly calibrated models that propagate uncertainty throughout. - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study.</p>
+</div>
+<div id="calibration" class="section level2">
+<h2>Calibration</h2>
+<p>A well calibrated model means that our probability statements are consistent with long-run observations <span class="citation">(Dawid 1982)</span>. If we use a 60 percent credibility interval, we would indeed find that the predicted quantity is included in this interval in 60 percent of our long-run observations. Recently <span class="citation">Talts et al. (2018)</span> described how we could use simulations to test if our models are well calibrated. We provide a brief recap of the idea of Simulation Based Calibration (SBC), for more details see <span class="citation">Talts et al. (2018)</span>.</p>
+<p>First, sample grounded truth values from the prior, <span class="math inline">\(\tilde{\theta} \sim \pi(\theta)\)</span>, and thereafter data from the data generating process conditional on these grounded truth values, <span class="math inline">\(\tilde{y} \sim \pi(y|\tilde{\theta})\)</span>. Subsequently, do inference on these simulated observations to get the posterior distribution <span class="math inline">\(\pi(\theta|\tilde{y})\)</span>. The sampled grounded truth values of the parameters can then be compared to the recovered posterior distributions. Now all the elements are available to make use of the following idea, “<em>integrating the exact posteriors over the Bayesian joint distribution returns the prior distribution,</em> <span class="math display">\[\pi(\theta) = \int d\tilde{y}d\tilde{\theta}\pi(\theta|\tilde{y}) \pi(\tilde{y}|\tilde{\theta})\pi(\tilde{\theta})\]</span>”<span class="citation">(Talts et al. 2018, 4)</span>.</p>
+<p>SECTION ON CALIBRATION.. - We care about uncertainty and not only about point estimates. - Assumption that we want propperly calibrated models that propagate uncertainty throughout. - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study.</p>
 <p>In the following we first show that both the annotation model of <span class="citation">Dawid and Skene (1979)</span> and the logistics regression that we use for the classification are propperly calibrated, seperately, and, jointly. Thereafter, we show that if you produce a dataset with predictors and golden standard labels based on the annotation model initially and only later run a classification model, you will produce posterior distirbutions that are under-dispersed.</p>
 <hr>
 </div>
-<div id="annotation-calibration" class="section level2">
-<h2>Annotation Calibration</h2>
-<p>Assume that we have <span class="math inline">\(J\)</span> annotators which produce annotations for (a subset of) <span class="math inline">\(I\)</span> items so we have a total of <span class="math inline">\(N\)</span> annotations that have <span class="math inline">\(K\)</span> possible labels, which we retrict to <span class="math inline">\(K=2\)</span> here for simplicity. This results in a corpus of annotations <span class="math inline">\(\textbf{y}\)</span> for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene <span class="citation">(1979)</span> such that <span class="math display">\[y_{ij} \sim bernoulli(\theta_{j, z_i})\]</span> <span class="math display">\[z_i \sim bernoulli(\pi)\]</span> <span class="math display">\[\theta_j = (\alpha_j, \beta_j)\]</span> where <span class="math inline">\(z_i\)</span> is the true label for item <span class="math inline">\(i\)</span>, <span class="math inline">\(\pi = p(z_i = 1)\)</span>,<label for="tufte-sn-3" class="margin-toggle sidenote-number">3</label><input type="checkbox" id="tufte-sn-3" class="margin-toggle"><span class="sidenote"><span class="sidenote-number">3</span> <em>can I state it like this?</em></span> <span class="math inline">\(\alpha_j\)</span> is the annotator sensitivity or the true positive rate such that <span class="math inline">\(\alpha_j = p(y_{ij} = 1 | z_i = 1)\)</span> and <span class="math inline">\(\beta_j\)</span> is the annotator specificity or true negative rate such that <span class="math inline">\(\beta_j = p(y_{ij} = 0 | z_i = 0)\)</span>. In the case where we have no additional item information <span class="math inline">\(\pi\)</span> is equal for all <span class="math inline">\(i\)</span> or alternatively stated <span class="math display">\[\pi = logit^{-1}(w_0).\]</span></p>
+<div id="simulation" class="section level2">
+<h2>Simulation</h2>
+<p>In these simulatins we restrict ourselves to the binairy classification problem. Extensions to categorical, ordinal and continous data could be considered as in the <span class="citation">Raykar et al. (2010)</span> paper.</p>
+<div id="annotation-only-model" class="section level3">
+<h3>Annotation only model</h3>
+<p>Assume that we have <span class="math inline">\(J\)</span> annotators which produce annotations for (a subset of) <span class="math inline">\(I\)</span> items so we have a total of <span class="math inline">\(N\)</span> annotations that have <span class="math inline">\(K\)</span> possible labels, which we retrict to <span class="math inline">\(K=2\)</span> here for simplicity. This results in a corpus of annotations <span class="math inline">\(\textbf{y}\)</span> for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene <span class="citation">(1979)</span> such that <span class="math display">\[y_{ij} \sim bernoulli(\theta_{j, z_i})\]</span> <span class="math display">\[z_i \sim bernoulli(\pi)\]</span> <span class="math display">\[\alpha_j = \theta_{j, 1}\]</span> <span class="math display">\[\beta_j = 1-\theta_{j,0}\]</span></p>
+<p>where <span class="math inline">\(z_i\)</span> is the true label for item <span class="math inline">\(i\)</span>, <span class="math inline">\(\pi = p(z_i = 1)\)</span> [^?], <span class="math inline">\(\alpha_j\)</span> is the annotator sensitivity or the true positive rate such that <span class="math inline">\(\alpha_j = p(y_{ij} = 1 | z_i = 1)\)</span> and <span class="math inline">\(\beta_j\)</span> is the annotator specificity or true negative rate such that <span class="math inline">\(\beta_j = p(y_{ij} = 0 | z_i = 0)\)</span>. In the case where we have no additional item information <span class="math inline">\(\pi\)</span> is equal for all <span class="math inline">\(i\)</span> or alternatively stated <span class="math display">\[\pi = logit^{-1}(w_0).\]</span> [^?]: <em>can I state it like this?</em></p>
+</div>
 <div id="stan-code" class="section level3">
 <h3>stan code</h3>
 <pre class="stan"><code>data {
@@ -141,14 +151,14 @@ model {
 }
 </code></pre>
 </div>
-<div id="calibration" class="section level3">
+<div id="calibration-1" class="section level3">
 <h3>Calibration</h3>
 <hr>
 </div>
-</div>
-<div id="classification" class="section level2">
-<h2>Classification</h2>
+<div id="classification-only-model" class="section level3">
+<h3>Classification only model</h3>
 <p><span class="math display">\[z_i \sim bernoulli(\pi)\]</span> <span class="math display">\[\pi_i = logit^{-1}(w^T X_i)\]</span></p>
+</div>
 <div id="stan-model" class="section level3">
 <h3>stan model</h3>
 <pre class="stan"><code>data {
@@ -250,8 +260,8 @@ model {
 <hr>
 </div>
 </div>
-<div id="concequences-of-seperation" class="section level1">
-<h1>Concequences of seperation</h1>
+<div id="concequences-of-seperation" class="section level2">
+<h2>Concequences of seperation</h2>
 <p>Imagine a process in which we collect a lot of annotations, via for instance Amazon Mechanical Turk. We “clean” the data so that from all these noisy annotations we get probability based golden standard labels for each item. By this point we are doing better than using majority voting and we create a nice data set with golden standard labels and predictors for all of the items. This data set is then later used to train a classification model once we are intereseted in this data again. We found previously that the joint model is propperly calibrated, but let’s look at what happens if we seperate the annotation and the classification problem into two destinct and seperate parts.</p>
 <p>Our model becomes: <span class="math display">\[y_{ij} \sim bernoulli(\theta_{j, z_i})\]</span> <span class="math display">\[z_i \sim bernoulli(\pi)\]</span> <span class="math display">\[\pi = logit^{-1}(w_0)\]</span> <span class="math display">\[\theta_j = (\alpha_j, \beta_j)\]</span> <span class="math display">\[z^*_i = \mathcal{I}[z_i &gt; .5]\]</span> <span class="math display">\[z^*_i \sim bernoulli(\hat{\pi})\]</span> <span class="math display">\[\hat{\pi}_i = logit^{-1}(w^T X_n)\]</span></p>
 <div id="stan-model-1" class="section level3">
@@ -361,6 +371,9 @@ loaded via a namespace (and not attached):
 <div id="references" class="section level2 unnumbered">
 <h2>References</h2>
 <div id="refs" class="references">
+<div id="ref-dawid_well-calibrated_1982">
+<p>Dawid, Alexander Philip. 1982. “The Well-Calibrated Bayesian.” <em>Journal of the American Statistical Association</em> 77 (379): 605–10.</p>
+</div>
 <div id="ref-dawid_maximum_1979">
 <p>Dawid, Alexander Philip, and Allan M Skene. 1979. “Maximum Likelihood Estimation of Observer Error‐rates Using the EM Algorithm.” <em>Journal of the Royal Statistical Society: Series C (Applied Statistics)</em> 28 (1): 20–28.</p>
 </div>
@@ -378,6 +391,9 @@ loaded via a namespace (and not attached):
 </div>
 <div id="ref-raykar_learning_2010">
 <p>Raykar, Vikas C, Shipeng Yu, Linda H Zhao, Gerardo Hermosillo Valadez, Charles Florin, Luca Bogoni, and Linda Moy. 2010. “Learning from Crowds.” <em>Journal of Machine Learning Research</em> 11 (Apr): 1297–1322.</p>
+</div>
+<div id="ref-talts_validating_2018">
+<p>Talts, Sean, Michael Betancourt, Daniel Simpson, Aki Vehtari, and Andrew Gelman. 2018. “Validating Bayesian Inference Algorithms with Simulation-Based Calibration.” <em>arXiv Preprint arXiv:1804.06788</em>.</p>
 </div>
 </div>
 </div>

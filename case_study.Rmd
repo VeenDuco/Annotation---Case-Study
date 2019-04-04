@@ -32,11 +32,11 @@ source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 <!-- notes: -->
 <!--  - for annotation examples look at paper from e.g. david blei, image recognition problems. -->
 
-<!-- ## Abstract {-} -->
+## Abstract {-}
+In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard. 
 
 <hr>
-## Introduction
-In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard. 
+## Annotations
 
 Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Sociology (e.g. Cultural consensus theory; @oravecz_bayesian_2014), Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes inconsistent labels for items from the same annotator that labels the item multiple times. We are interested in figuring out the true classes [^2] for the items. 
 
@@ -44,6 +44,14 @@ It has been well established that probability based models are superior to a sim
 
 
 ## Calibration 
+A well calibrated model means that our probability statements are consistent with long-run observations [@dawid_well-calibrated_1982]. If we use a 60 percent credibility interval, we would indeed find that the predicted quantity is included in this interval in 60 percent of our long-run observations. Recently @talts_validating_2018 described how we could use simulations to test if our models are well calibrated. We provide a brief recap of the idea of Simulation Based Calibration (SBC), for more details see @talts_validating_2018.
+
+First, sample grounded truth values from the prior, $\tilde{\theta} \sim \pi(\theta)$, and thereafter data from the data generating process conditional on these grounded truth values, $\tilde{y} \sim \pi(y|\tilde{\theta})$. Subsequently, do inference on these simulated observations to get the posterior distribution $\pi(\theta|\tilde{y})$. The sampled grounded truth values of the parameters can then be compared to the recovered posterior distributions. Now all the elements are available to make use of the following idea; "*for any model the exact posterior expectation with respect to data generated from the Bayesian joint distribution reduces to the corresponding prior expectation.*"[@talts_validating_2018, p. 4]. Or alternatively written
+$$\pi(\theta) = \int d\tilde{y}d\tilde{\theta}\pi(\theta|\tilde{y}) \pi(\tilde{y}|\tilde{\theta})\pi(\tilde{\theta}).$$
+
+
+
+
 SECTION ON CALIBRATION.. 
    - We care about uncertainty and not only about point estimates.
    - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
@@ -58,14 +66,22 @@ In the following we first show that both the annotation model of @dawid_maximum_
 
 <hr>
 
-## Annotation Calibration
+## Simulation
+
+In these simulatins we restrict ourselves to the binairy classification problem. Extensions to categorical, ordinal and continous data could be considered as in the @raykar_learning_2010 paper. 
+
+### Annotation only model
 
 Assume that we have $J$ annotators which produce annotations for (a subset of) $I$ items so we have a total of $N$ annotations that have $K$ possible labels, which we retrict to $K=2$ here for simplicity. This results in a corpus of annotations $\textbf{y}$ for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene [-@dawid_maximum_1979] such that 
 $$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
 $$z_i \sim bernoulli(\pi)$$
-$$\theta_j = (\alpha_j, \beta_j)$$
+$$\alpha_j = \theta_{j, 1}$$
+$$\beta_j = 1-\theta_{j,0}$$
+
 where $z_i$ is the true label for item $i$, $\pi = p(z_i = 1)$ [^?], $\alpha_j$ is the annotator sensitivity or the true positive rate such that $\alpha_j = p(y_{ij} = 1 | z_i = 1)$ and $\beta_j$ is the annotator specificity or true negative rate such that $\beta_j = p(y_{ij} = 0 | z_i = 0)$. In the case where we have no additional item information $\pi$ is equal for all $i$ or alternatively stated
 $$\pi = logit^{-1}(w_0).$$
+[^?]: *can I state it like this?*
+
 
 ### stan code
 
@@ -134,12 +150,12 @@ model {
 ### Calibration
 
 
-[^?]: *can I state it like this?*
+
 
 
 
 <hr>
-## Classification
+### Classification only model
 
 $$z_i \sim bernoulli(\pi)$$
 $$\pi_i = logit^{-1}(w^T X_i)$$
@@ -255,7 +271,7 @@ model {
 
 
 <hr>
-# Concequences of seperation
+## Concequences of seperation
 
 Imagine a process in which we collect a lot of annotations, via for instance Amazon Mechanical Turk. We "clean" the data so that from all these noisy annotations we get probability based golden standard labels for each item. By this point we are doing better than using majority voting and we create a nice data set with golden standard labels and predictors for all of the items. This data set is then later used to train a classification model once we are intereseted in this data again. We found previously that the joint model is propperly calibrated, but let's look at what happens if we seperate the annotation and the classification problem into two destinct and seperate parts.
 
