@@ -44,12 +44,19 @@ It has been well established that probability based models are superior to a sim
 
 
 ## Calibration 
-A well calibrated model means that our probability statements are consistent with long-run observations [@dawid_well-calibrated_1982]. If we use a 60 percent credibility interval, we would indeed find that the predicted quantity is included in this interval in 60 percent of our long-run observations. Recently @talts_validating_2018 described how we could use simulations to test if our models are well calibrated. We provide a brief recap of the idea of Simulation Based Calibration (SBC), for more details see @talts_validating_2018.
+A well calibrated model means that our probability statements are consistent with long-run observations [@dawid_well-calibrated_1982]. If we use a 60 percent credibility interval, we would indeed find that the predicted quantity is included in this interval in 60 percent of our long-run observations. Recently @talts_validating_2018 described how we could use simulations to test if our models are well calibrated. We provide a brief recap of the idea of Simulation-Based Calibration (SBC), for more details see @talts_validating_2018.
 
-First, sample grounded truth values from the prior, $\tilde{\theta} \sim \pi(\theta)$, and thereafter data from the data generating process conditional on these grounded truth values, $\tilde{y} \sim \pi(y|\tilde{\theta})$. Subsequently, do inference on these simulated observations to get the posterior distribution $\pi(\theta|\tilde{y})$. The sampled grounded truth values of the parameters can then be compared to the recovered posterior distributions. Now all the elements are available to make use of the following idea; "*for any model the exact posterior expectation with respect to data generated from the Bayesian joint distribution reduces to the corresponding prior expectation.*"[@talts_validating_2018, p. 4]. Or alternatively written
+It is desirable to have a procedure to corroborate that the posterior samples we get from our Bayesian algorithm are actualy samples form the model that we expect. The stucture of the Bayesian joint distribution, $\pi(y,\theta) = \pi(y|\theta)\pi(\theta)$, provides a means to validate the Bayesian algorithms. We assume that the prior distribution covers parts of the parameter space that are relevant and as such we should sample ground truth from the prior[^3], $\tilde{\theta} \sim \pi(\theta)$. Thereafter data is sampled from the data generating process conditional on the ground truth, $\tilde{y} \sim \pi(y|\tilde{\theta})$. Subsequently, you can do inference on these simulated observations to get the posterior distribution $\pi(\theta|\tilde{y})$. Integrating the posteriors over the Bayesian joint distribution should get the prior distribution back,
 $$\pi(\theta) = \int d\tilde{y}d\tilde{\theta}\pi(\theta|\tilde{y}) \pi(\tilde{y}|\tilde{\theta})\pi(\tilde{\theta}).$$
+As stated by @talts_validating_2018 (p. 3): "*In other words, for any model the average of any exact posterior expectation with repect to the data generated from the Bayesian joint distribution reduces to the corresponding prior expectation.*" If not, we found a mistake and SBC is a procedure that helps us determine if we made a mistake and moreover, it provides information on the nature of the problem.
+
+SBC makes use of histograms of rank statistics to detect discrepancies between the data-averaged posterior and the prior. 
 
 
+```{r SBC-margin-unif, fig.margin=TRUE, fig.cap= "Example of uniform distribution of rank statistics. The gray band represents 99% of the expected variation of the ranks under a uniform histogram.", results = 'hide', warning = FALSE}
+set.seed(1)
+sbc_rank_hist(floor(runif(1000,0,10)), reps = 1000, bins = 10) + ggtheme_tufte()
+```
 
 
 SECTION ON CALIBRATION.. 
@@ -62,7 +69,7 @@ In the following we first show that both the annotation model of @dawid_maximum_
 
 [^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
 [^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
-
+[^3]: Traditional simulation studies try to recover a set ground truth for which the algorithm might perfom well, or not. This leaves the suitability of the algorithm for large parts of the parameter space an open question.
 
 <hr>
 
