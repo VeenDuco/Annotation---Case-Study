@@ -3,7 +3,7 @@ title: "Learning From Crowds: Fully Bayesian and Fully Calibrated"
 output:
   tufte::tufte_html:
     toc: true
-    toc_depth: 2
+    toc_depth: 3
     
 citation_package: natbib
 bibliography: ["Annotation Models - project Bob.bib", packages.bib]
@@ -33,24 +33,24 @@ source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
 <!--  - for annotation examples look at paper from e.g. david blei, image recognition problems. -->
 
 ## Abstract {-}
-In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always posible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a propperly calibrated model whereas seperating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard. 
+In statistics and machine learning we often consider cases in which there is a dependent variable with known labels and a bunch of predictors that we wish to relate to these labels. It is however not always possible to obtain gold standard labels and instead we might have multiple annotations for each item from different experts or annotators. In this case study we discuss how to relate predictors and annotations of items to one another in a fully Bayesian way. Moreover, we show that specifying a joint annotation and classification model leads to a properly calibrated model whereas separating annotation and classification leads to under-dispersed posterior distributions for the relationship between the predictors and the unknown golden standard. 
 
 <hr>
 ## Annotations
 
 Annotation is concerned with producing gold standard labels [^1]. The problem of producing gold standard labels can be encountered in many differed fields, for instance, Natural Language Processing [@paun_comparing_2019], Sociology (e.g. Cultural consensus theory; @oravecz_bayesian_2014), Item Response Theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. A corpus of annotations usually contains inconsistent labels for items across annotators, and, sometimes inconsistent labels for items from the same annotator that labels the item multiple times. We are interested in figuring out the true classes [^2] for the items. 
 
-It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionaly, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014], which we consider a desirable property for our models. In this case study we use the annotation model of @dawid_maximum_1979 to obtain estimates of annotator sensitivity (true positive rate) and specificity (true negative rate) and true class probabilities. The model of @dawid_maximum_1979 is easily extended to incorporate joint estimation of a classification scheme as shown in @raykar_learning_2010. In contrast to @raykar_learning_2010 we do not use posterior mode estimates, we do a full Bayesian inference and are interested in the calibrartion of our posterior distributions. 
+It has been well established that probability based models are superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. Additionally, traditional measures of annotator agreement such as Cohen's $\kappa$ and (chance-adjusted) pairwise agreement do not take annotator ability into account when annotators disagree [@passonneau_benefits_2014], which we consider a desirable property for our models. In this case study we use the annotation model of @dawid_maximum_1979 to obtain estimates of annotator sensitivity (true positive rate) and specificity (true negative rate) and true class probabilities. The model of @dawid_maximum_1979 is easily extended to incorporate joint estimation of a classification scheme as shown in @raykar_learning_2010. In contrast to @raykar_learning_2010 we do not use posterior mode estimates, we do a full Bayesian inference and are interested in the calibration of our posterior distributions. 
 
 
 ## Calibration 
 A well calibrated model means that our probability statements are consistent with long-run observations [@dawid_well-calibrated_1982]. If we use a 60 percent credibility interval, we would indeed find that the predicted quantity is included in this interval in 60 percent of our long-run observations. Recently @talts_validating_2018 described how we could use simulations to test if our models are well calibrated. We provide a brief recap of the idea of Simulation-Based Calibration (SBC), for more details see @talts_validating_2018.
 
-It is desirable to have a procedure to corroborate that the posterior samples we get from our Bayesian algorithm are actualy samples form the model that we expect. The stucture of the Bayesian joint distribution, $\pi(y,\theta) = \pi(y|\theta)\pi(\theta)$, provides a means to validate the Bayesian algorithms. We assume that the prior distribution covers parts of the parameter space that are relevant and as such we should sample ground truth from the prior[^3], $\tilde{\theta} \sim \pi(\theta)$. Thereafter data is sampled from the data generating process conditional on the ground truth, $\tilde{y} \sim \pi(y|\tilde{\theta})$. Subsequently, you can do inference on these simulated observations to get the posterior distribution $\pi(\theta|\tilde{y})$. Integrating the posteriors over the Bayesian joint distribution should get the prior distribution back,
+It is desirable to have a procedure to corroborate that the posterior samples we get from our Bayesian algorithm are actually samples form the model that we expect. The structure of the Bayesian joint distribution, $\pi(y,\theta) = \pi(y|\theta)\pi(\theta)$, provides a means to validate the Bayesian algorithms. We assume that the prior distribution covers parts of the parameter space that are relevant and as such we should sample ground truth from the prior[^3], $\tilde{\theta} \sim \pi(\theta)$. Thereafter data is sampled from the data generating process conditional on the ground truth, $\tilde{y} \sim \pi(y|\tilde{\theta})$. Subsequently, you can do inference on these simulated observations to get the posterior distribution $\pi(\theta|\tilde{y})$. Integrating the posteriors over the Bayesian joint distribution should get the prior distribution back,
 $$\pi(\theta) = \int d\tilde{y}d\tilde{\theta}\pi(\theta|\tilde{y}) \pi(\tilde{y}|\tilde{\theta})\pi(\tilde{\theta}).$$
 As stated by @talts_validating_2018 (p. 3): "*In other words, for any model the average of any exact posterior expectation with repect to the data generated from the Bayesian joint distribution reduces to the corresponding prior expectation.*" If not, we found a mistake and SBC is a procedure that helps us determine if we made a mistake and moreover, it provides information on the nature of the problem.
 
-SBC makes use of histograms of rank statistics to detect discrepancies between the data-averaged posterior and the prior. 
+SBC makes use of histograms of rank statistics to detect discrepancies between the data-averaged posterior and the prior[^4]. If we rank each draw from the prior $\tilde{\theta}$ among the $L$ samples of the posterior $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ and we do this over and over again, the rank statistics for the sample of the prior $\tilde{\theta}$ should follow a uniform distribution across [0, $L$]. Systematic deviations from this uniformity point to specific problems with the Bayesian Algorithm, see @talts_validating_2018 for the specific patterns. 
 
 
 ```{r SBC-margin-unif, fig.margin=TRUE, fig.cap= "Example of uniform distribution of rank statistics. The gray band represents 99% of the expected variation of the ranks under a uniform histogram.", results = 'hide', warning = FALSE}
@@ -58,39 +58,82 @@ set.seed(1)
 sbc_rank_hist(floor(runif(1000,0,10)), reps = 1000, bins = 10) + ggtheme_tufte()
 ```
 
-
-SECTION ON CALIBRATION.. 
-   - We care about uncertainty and not only about point estimates.
-   - Assumption that we want propperly calibrated models that propagate uncertainty throughout. 
-   - Briefly explain (simulation based) calibration and that we will use this as a measure to validate our models in the case study. 
-
-In the following we first show that both the annotation model of @dawid_maximum_1979 and the logistics regression that we use for the classification are propperly calibrated, seperately, and, jointly. Thereafter, we show that if you produce a dataset with predictors and golden standard labels based on the annotation model initially and only later run a classification model, you will produce posterior distirbutions that are under-dispersed. 
+In the following we first show that both the annotation model of @dawid_maximum_1979 and the logistics regression that we use for the classification are properly calibrated, separately, and, jointly[^5]. Thereafter, we show that if you produce a data set with predictors and golden standard labels based on the annotation model initially and only later run a classification model, you will produce posterior distributions that are under-dispersed. 
 
 
 [^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
 [^2]: The true class is alternatively referred to as true label, grounded truth, answer key or golden standard.
-[^3]: Traditional simulation studies try to recover a set ground truth for which the algorithm might perfom well, or not. This leaves the suitability of the algorithm for large parts of the parameter space an open question.
+[^3]: Traditional simulation studies try to recover a set ground truth for which the algorithm might perform well, or not. This leaves the suitability of the algorithm for large parts of the parameter space an open question.
+[^4]: Note that we use Algorithm 2 of @talts_validating_2018 to mitigate potential problems with SBC that arise due to correlated posterior samples.
+[^5]: In these simulations we restrict ourselves to the binary classification problem. Extensions to categorical, ordinal and continuous data could be considered as in paper of @raykar_learning_2010. 
+
 
 <hr>
 
 ## Simulation
 
-In these simulatins we restrict ourselves to the binairy classification problem. Extensions to categorical, ordinal and continous data could be considered as in the @raykar_learning_2010 paper. 
-
 ### Annotation only model
 
-Assume that we have $J$ annotators which produce annotations for (a subset of) $I$ items so we have a total of $N$ annotations that have $K$ possible labels, which we retrict to $K=2$ here for simplicity. This results in a corpus of annotations $\textbf{y}$ for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene [-@dawid_maximum_1979] such that 
+Assume that we have $J$ annotators which produce annotations for (a subset of) $I$ items so we have a total of $N$ annotations. This results in a corpus of annotations $\textbf{y}$ for which we specify probability based models to determine the gold standard label probabilities. We follow the model by Dawid and Skene [-@dawid_maximum_1979] such that 
 $$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
 $$z_i \sim bernoulli(\pi)$$
 $$\alpha_j = \theta_{j, 1}$$
 $$\beta_j = 1-\theta_{j,0}$$
 
-where $z_i$ is the true label for item $i$, $\pi = p(z_i = 1)$ [^?], $\alpha_j$ is the annotator sensitivity or the true positive rate such that $\alpha_j = p(y_{ij} = 1 | z_i = 1)$ and $\beta_j$ is the annotator specificity or true negative rate such that $\beta_j = p(y_{ij} = 0 | z_i = 0)$. In the case where we have no additional item information $\pi$ is equal for all $i$ or alternatively stated
+where $z_i$ is the true label for item $i$, $\pi = p(z_i = 1)$, $\alpha_j$ is the annotator sensitivity or the true positive rate such that $\alpha_j = p(y_{ij} = 1 | z_i = 1)$ and $\beta_j$ is the annotator specificity or true negative rate such that $\beta_j = p(y_{ij} = 0 | z_i = 0)$. In the case where we have no additional item information $\pi$ is equal for all items or alternatively stated
 $$\pi = logit^{-1}(w_0).$$
-[^?]: *can I state it like this?*
+
+First we define our data structure so that we can accommodate missing combinations of annotators and items. Each annotation is therefore a combination of the Rating $y_n$, the items indicator $ii_n$ and the annotator indicator $jj_n$.
 
 
-### stan code
+| n | Annotator ($jj_n$) | Item ($ii_n$) | Rating ($y_n$) |
+| --- | ------------------ | ------------- | -------------- |
+| 1 | 1 | 1 | 0 |
+| 2 | 2 | 1 | 1 |
+| 3 | 63 | 12 | 1 |
+| . | . | . | . |
+| . | . | . | . |
+| . | . | . | . |
+
+We simulate a data structure in which we have $J = 10$ annotators, $I = 100$ items and we have 50\% missingness on all combinations of annotators and items so that $N = 500$. Next we define $\pi(\theta)$, where $\alpha \sim Beta(10,1)$, $\beta \sim Beta(10,1)$ and $w_0 \sim \mathcal{N}(0,5)$. We set $L = 19$ such that we get a histogram with 20 bins and use 1000 replications such that we stay well above the ratio of 20 replications per bin that is recommended by @talts_validating_2018. We use the following generative stan model to sample $\tilde{\theta} \sim \pi(\theta)$ and $\tilde{y} \sim \pi(y|\tilde{\theta})$: 
+
+```{stan, eval = FALSE, output.var="Annotation_only_sim", echo = TRUE}
+data {
+  int<lower=0> I; 
+  int<lower=0> J;
+  int<lower=0> N;
+  int<lower=1> ii[N];  
+  int<lower=1> jj[N];  
+}
+
+
+generated quantities {
+  real w0 = normal_rng(0, 5); 
+  vector<lower=0.1,upper=1>[J] alpha; 
+  vector<lower=0.1,upper=1>[J] beta;  
+  int<lower=0, upper=1> z[N];
+  int<lower=0, upper=1> y[N];
+  
+  for(j in 1:J){
+    alpha[j] = beta_rng(10, 1);
+    beta[j] = beta_rng(10, 1);
+  }
+  
+  for(n in 1:N)
+    z[n] = bernoulli_logit_rng(w0);
+    
+  for(n in 1:N){
+    if(z[n] == 1){
+      y[n] = bernoulli_rng(alpha[jj[n]]);
+    } else {
+      y[n] = bernoulli_rng((1-beta[jj[n]]));
+    }
+  }
+}
+
+```
+
+Once we have the sample for $\tilde{\theta}$ and $\tilde{y}$ for all replications we can start fitting $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ for all replications using the following stan model: 
 
 ```{stan, eval = FALSE, output.var="Annotation_only", echo = TRUE}
 data {
@@ -154,20 +197,80 @@ model {
 
 ```
 
-### Calibration
+Finally we compute the rank statistics and fill the histograms for each parameters and see if these are consistent with a uniform distribution.
+
+```{r, include = FALSE}
+
+finalMatrix <- readRDS(paste0("SIMULATIONS/RESULTS/finalMatrixRDS/",
+                              "raykar_reduced_to_Dawid_SkeneI100J10D0missing50Bins19replications1000.rds"))
+plotList_a <- apply(finalMatrix[, 1:10], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plotList_b <- apply(finalMatrix[, 11:20], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plot_w0 <- sbc_rank_hist(finalMatrix[, 21], reps = nrow(finalMatrix), bins = 20,
+                        title = "SBC intercept Dawid and Skene model")
+  
+
+# n <- length(plotList)
+# nCol <- floor(sqrt(n))
+# do.call("grid.arrange", c(plotList, ncol=nCol, 
+#                           top = "SBC logistic regression for Intercept and 10 predictors")) 
+g_a <- do.call("grid.arrange", c(plotList_a, ncol = 5, nrow = 2,
+                               top = "SBC Sensitivity Dawid and Skene model"))
+g_b <- do.call("grid.arrange", c(plotList_b, ncol = 5, nrow = 2,
+                               top = "SBC Specificity Dawid and Skene model"))
 
 
+```
 
+````{r, fig.fullwidth = TRUE}
+g2 <- cowplot::ggdraw(g_a) + ggtheme_tufte()
+plot(g2)
 
+g3 <- cowplot::ggdraw(g_b) + ggtheme_tufte()
+plot(g3)
 
+```
+
+```{r}
+g4 <- cowplot::ggdraw(plot_w0) + ggtheme_tufte()
+plot(g4)
+```
+
+If we look at the rank histograms for the Dawid and Skene model it seems like we do not detect systematic differences from uniform distributions. We therefore have no reason to suspect that this model is not well calibrated. 
 
 <hr>
 ### Classification only model
 
-$$z_i \sim bernoulli(\pi)$$
-$$\pi_i = logit^{-1}(w^T X_i)$$
+Before we extend the Dawid and Skene model to include joint estimation of a classification scheme as shown in @raykar_learning_2010, we use SBC to ensure that the classification part is well calibrated by itself. We use a logistic regression for this classification part such that
 
-### stan model
+$$z_i \sim bernoulli(\pi)$$
+$$\pi_i = logit^{-1}(w^T X_i).$$
+We simulate data such that we have $I = 100$ items with $D = 10$. The prior on the intercept $w_0 \sim \mathcal{N}(0,5)$ and the priors on the predictors are $w_d \sim \mathcal{N}(0,2)$. We set $L = 19$ such that we get a histogram with 20 bins and use 3000 replications as this model is computationally relatively cheap. We use the following generative stan model to sample $\tilde{\theta} \sim \pi(\theta)$ and $\tilde{y} \sim \pi(y|\tilde{\theta})$: 
+
+```{stan, eval = FALSE, echo = TRUE, output.var = "classification_sim"}
+data {
+  int<lower=0> I; 
+  int<lower=0> N; 
+  int<lower=0> D; 
+  matrix[I,D] x;  
+  int<lower=1> ii[N]; 
+}
+
+generated quantities {
+  vector[D] w;  
+  real w0 = normal_rng(0, 5);  
+  int<lower=0, upper=1> y[N];
+  
+  for(d in 1:D)
+    w[d] = normal_rng(0, 2);       
+  
+  for(n in 1:N)
+      y[n] = bernoulli_logit_rng(w0 + x[ii[n]] * w);
+    
+}
+
+``` 
+
+Once we have the sample for $\tilde{\theta}$ and $\tilde{y}$ for all replications we can start fitting $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ for all replications using the following stan model: 
 
 ```{stan, eval = FALSE, echo = TRUE, output.var = "classification"}
 data {
@@ -196,18 +299,85 @@ model {
 
 ```
 
+Finally we compute the rank statistics and fill the histograms for each parameters and see if these are consistent with a uniform distribution.
+
+```{r, include = FALSE}
+
+finalMatrix <- readRDS(paste0("SIMULATIONS/RESULTS/finalMatrixRDS/",
+                              "logistic_regressionI100J10D10missing50Bins19replications3000.rds"))
+plotList <- apply(finalMatrix, 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = max(finalMatrix) + 1)
+
+# do.call("grid.arrange", c(plotList, ncol=nCol, 
+#                           top = "SBC logistic regression for Intercept and 10 predictors")) 
+g <- do.call("grid.arrange", c(plotList, ncol=4, nrow = 3,
+                               top = "SBC logistic regression for Intercept and 10 predictors"))
+```
 
 
+````{r, fig.fullwidth = TRUE}
+g2 <- cowplot::ggdraw(g) + ggtheme_tufte()
+plot(g2)
+
+```
+
+As with the annotation model, if we look at the rank histograms for the classification model it seems like we do not detect systematic differences from uniform distributions. We therefore have no reason to suspect that this model is not well calibrated.
 
 <hr>
-## Joint model
+### Joint model
+
+We take the model one step further and extend the Dawid and Skene model to include joint estimation of a classification such that
 
 $$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
 $$z_i \sim bernoulli(\pi)$$
-$$\theta_j = (\alpha_j, \beta_j)$$
+$$\alpha_j = \theta_{j, 1}$$
+$$\beta_j = 1-\theta_{j,0}$$
 $$\pi_i = logit^{-1}(w^T X_i)$$
+We stay consistent in the data structure such that we have $J = 10$ annotators, $I = 100$ items, we have 50\% missingness on all combinations of annotators and items so that $N = 500$ and we have $D=10$ predictors for the items. We define $\pi(\theta)$, where $\alpha \sim Beta(10,1)$, $\beta \sim Beta(10,1)$, $w_0 \sim \mathcal{N}(0,5)$ and $w_d \sim \mathcal{N}(0,2)$. We set $L = 19$ such that we get a histogram with 20 bins and use 1000 replications. We use the following generative stan model to sample $\tilde{\theta} \sim \pi(\theta)$ and $\tilde{y} \sim \pi(y|\tilde{\theta})$: 
 
-### stan code
+```{stan, eval = FALSE, output.var="Joint_model_sim", echo = TRUE}
+data {
+  int<lower=0> I; 
+  int<lower=0> J;
+  int<lower=0> N;
+  int<lower=0> D; 
+  matrix[I,D] x;  
+  int<lower=1> ii[N];  
+  int<lower=1> jj[N];  
+}
+
+
+generated quantities {
+  vector[D] w;
+  real w0 = normal_rng(0, 5); 
+  vector<lower=0.1,upper=1>[J] alpha; 
+  vector<lower=0.1,upper=1>[J] beta;  
+  int<lower=0, upper=1> z[N];
+  int<lower=0, upper=1> y[N];
+  
+  for(j in 1:J){
+    alpha[j] = beta_rng(10, 1);
+    beta[j] = beta_rng(10, 1);
+  }
+  
+  for(d in 1:D)
+    w[d] = normal_rng(0, 2);
+  
+  for(n in 1:N)
+    z[n] = bernoulli_logit_rng(w0 + x[ii[n]] * w);
+    
+  for(n in 1:N){
+    if(z[n] == 1){
+      y[n] = bernoulli_rng(alpha[jj[n]]);
+    } else {
+      y[n] = bernoulli_rng((1-beta[jj[n]]));
+    }
+  }
+}
+
+```
+
+Once we have the sample for $\tilde{\theta}$ and $\tilde{y}$ for all replications we can start fitting $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ for all replications using the following stan model: 
+
 
 ```{stan, eval = FALSE, echo = TRUE, output.var = "Joint_model"}
 data {
@@ -276,133 +446,168 @@ model {
 
 ```
 
+Finally we compute the rank statistics and fill the histograms for each parameters and see if these are consistent with a uniform distribution.
+
+```{r, include = FALSE}
+
+finalMatrix <- readRDS(paste0("SIMULATIONS/RESULTS/finalMatrixRDS/",
+                              "raykar_fullI100J10D10missing50Bins19replications1000.rds"))
+plotList_a <- apply(finalMatrix[, 1:10], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plotList_b <- apply(finalMatrix[, 11:20], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plotList_w <- apply(finalMatrix[, 21:31], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+  
+
+# n <- length(plotList)
+# nCol <- floor(sqrt(n))
+# do.call("grid.arrange", c(plotList, ncol=nCol, 
+#                           top = "SBC logistic regression for Intercept and 10 predictors")) 
+g_a <- do.call("grid.arrange", c(plotList_a, ncol = 5, nrow = 2,
+                               top = "SBC Sensitivity"))
+g_b <- do.call("grid.arrange", c(plotList_b, ncol = 5, nrow = 2,
+                               top = "SBC Specificity"))
+g_w <- do.call("grid.arrange", c(plotList_w, ncol = 4, nrow = 3,
+                               top = "SBC Intercept and 10 predictors"))
+
+
+```
+
+````{r, fig.fullwidth = TRUE}
+g2 <- cowplot::ggdraw(g_a) + ggtheme_tufte()
+plot(g2)
+
+g3 <- cowplot::ggdraw(g_b) + ggtheme_tufte()
+plot(g3)
+
+g4 <- cowplot::ggdraw(g_w) + ggtheme_tufte()
+plot(g4)
+
+```
+
+It still seems like  the histograms are not deviating systematically from the uniform distributions. We therefore have no reason to suspect that this joint model is not well calibrated. So far, so good. 
 
 <hr>
-## Concequences of seperation
+### Concequences of seperation
 
-Imagine a process in which we collect a lot of annotations, via for instance Amazon Mechanical Turk. We "clean" the data so that from all these noisy annotations we get probability based golden standard labels for each item. By this point we are doing better than using majority voting and we create a nice data set with golden standard labels and predictors for all of the items. This data set is then later used to train a classification model once we are intereseted in this data again. We found previously that the joint model is propperly calibrated, but let's look at what happens if we seperate the annotation and the classification problem into two destinct and seperate parts.
+Imagine a process in which we collect a lot of annotations, via for instance Amazon Mechanical Turk. We "clean" the data so that from all these noisy annotations we get probability based golden standard labels for each item. By this point we are doing better than using majority voting and we create a nice data set with golden standard labels and predictors for all of the items. This data set is then later used to train a classification model once we are interested in this data again. We found previously that the joint model is properly calibrated, but let's look at what happens if we separate the annotation and the classification problem into two distinct and separate parts.
 
 Our model becomes: 
 $$y_{ij} \sim bernoulli(\theta_{j, z_i})$$
 $$z_i \sim bernoulli(\pi)$$
 $$\pi = logit^{-1}(w_0)$$
-$$\theta_j = (\alpha_j, \beta_j)$$
+$$\alpha_j = \theta_{j, 1}$$
+$$\beta_j = 1-\theta_{j,0}$$
 $$z^*_i = \mathcal{I}[z_i > .5]$$
 $$z^*_i \sim bernoulli(\hat{\pi})$$
 $$\hat{\pi}_i = logit^{-1}(w^T X_n)$$
 
-### stan model
-
-Now to obtain $\textbf{z}^*$ we add a generated quantities section to the annotation model.
+We use the exact same setup as in the joint model to sample $\tilde{\theta} \sim \pi(\theta)$ and $\tilde{y} \sim \pi(y|\tilde{\theta})$. To get $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ we have two steps; step 1 that uses the annotation model of Dawid and Skene with only an intercept predictor. From this we can get the ranks for $\alpha_j$ and $\beta_j$, we also use the generated quantities section to provide us with predictive distributions for $z_i$ using the following stan code:
 
 ```{stan, eval = FALSE, echo = TRUE, output.var = "gen_quant"}
 generated quantities {
   vector[I] E_z;
-  {
-    vector[I] logit_z_hat;
-    vector[I] log_z_hat;   // posterior mean: log Pr[z[n] == 1]
-    vector[I] log1m_z_hat; //                 log Pr[z[n] == 0]
+  
+  vector[I] logit_z_hat;
+  vector[I] log_z_hat;   
+  vector[I] log1m_z_hat; 
 
-    vector[J] log_alpha;
-    vector[J] log1m_alpha;
-    vector[J] log_beta;
-    vector[J] log1m_beta;
+  vector[J] log_alpha;
+  vector[J] log1m_alpha;
+  vector[J] log_beta;
+  vector[J] log1m_beta;
 
-    logit_z_hat = rep_vector(w0, I);
+  logit_z_hat = rep_vector(w0, I);
     
-    for (i in 1:I) {
-      log_z_hat[i] = log_inv_logit(logit_z_hat[i]);
-      log1m_z_hat[i] = log1m_inv_logit(logit_z_hat[i]);
-    }
+  for (i in 1:I) {
+    log_z_hat[i] = log_inv_logit(logit_z_hat[i]);
+    log1m_z_hat[i] = log1m_inv_logit(logit_z_hat[i]);
+  }
 
-    for (j in 1:J) {
-      log_alpha[j] = log(alpha[j]);
-      log1m_alpha[j] = log1m(alpha[j]);
-      log_beta[j] = log(beta[j]);
-      log1m_beta[j] = log1m(beta[j]);
-    }
+  for (j in 1:J) {
+    log_alpha[j] = log(alpha[j]);
+    log1m_alpha[j] = log1m(alpha[j]);
+    log_beta[j] = log(beta[j]);
+    log1m_beta[j] = log1m(beta[j]);
+  }
 
-   for (n in 1:N){
+  for (n in 1:N){
     real pos_sum;
     real neg_sum;
     real maxpn;
     pos_sum = log_z_hat[ii[n]];
     neg_sum = log1m_z_hat[ii[n]];
     if (y[n] == 1) {
-        pos_sum = pos_sum + log_alpha[jj[n]];
-        neg_sum = neg_sum + log1m_beta[jj[n]];
-      } else {
-        pos_sum = pos_sum + log1m_alpha[jj[n]];
-        neg_sum = neg_sum + log_beta[jj[n]];
-      }
+      pos_sum = pos_sum + log_alpha[jj[n]];
+      neg_sum = neg_sum + log1m_beta[jj[n]];
+    } else {
+      pos_sum = pos_sum + log1m_alpha[jj[n]];
+      neg_sum = neg_sum + log_beta[jj[n]];
+    }
     maxpn = fmax(pos_sum, neg_sum);
-      pos_sum = pos_sum - maxpn;
-      neg_sum = neg_sum - maxpn;
-      E_z[ii[n]] = exp(pos_sum) / (exp(pos_sum) + exp(neg_sum));
-  }
+    pos_sum = pos_sum - maxpn;
+    neg_sum = neg_sum - maxpn;
+    E_z[ii[n]] = exp(pos_sum) / (exp(pos_sum) + exp(neg_sum));
   }
 }
 
 ```
 
-As an idicator function we use the following piece of R code:
+Now to obtain $\textbf{z}^*$ we use an indicator function based on the mean value for the posterior predictive distribution of $z_i$, $\hat{z}_i$, so that $z^*_i = \mathcal{I}[\hat{z}_i > .5]$. $\textbf{z}^*$ can be seen as the gold standard labels for the items which we could put in a data set together with the item predictors. The second estimation step is to use the gold standard labels to fit the classification model. From this we would approximate $\theta_1,...,\theta_L \sim \pi(\theta|\tilde{y})$ for $w_0$ and $w_d$, although in practice this now becomes $\theta_1,...,\theta_L \sim \pi(\theta|z^*)$. [^6]
 
+[^6]: I'm not entirely sure this is right...
 
-```{r, eval = FALSE, echo = TRUE}
-z_star <- ifelse(summary(fit, pars = "E_z")$summary[, 1] < 0.5, 0, 1)
-```
-
-
-Thereafter we can fit the classification model with $\textbf{z}^*$.
-
-<hr>
-
-# Conclusion / Take Home Message
-
-If you have a corpus of annotations do not "clean-up" this data set by producing golden standard labels. If you care about coverage of your parameters at all model the classification and annotation jointly and propagate your uncertainty throughout. 
-
-<hr>
-
-
+Let's look at how the distributions for the rank statistics are distributed in this two-step procedure.
 
 ```{r, include = FALSE}
 
 finalMatrix <- readRDS(paste0("SIMULATIONS/RESULTS/finalMatrixRDS/",
-                              "logistic_regressionI100J10D10missing50Bins19replications3000.rds"))
-plotList <- apply(finalMatrix, 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = max(finalMatrix) + 1)
+                              "raykar_two_stepI100J10D10missing50Bins19replications1000.rds"))
+plotList_a <- apply(finalMatrix[, 1:10], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plotList_b <- apply(finalMatrix[, 11:20], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+plotList_w <- apply(finalMatrix[, 21:31], 2, sbc_rank_hist, reps = nrow(finalMatrix), bins = 20)
+  
 
-n <- length(plotList)
-nCol <- floor(sqrt(n))
+# n <- length(plotList)
+# nCol <- floor(sqrt(n))
 # do.call("grid.arrange", c(plotList, ncol=nCol, 
 #                           top = "SBC logistic regression for Intercept and 10 predictors")) 
-g <- do.call("grid.arrange", c(plotList, ncol=nCol, 
-                               top = "SBC logistic regression for Intercept and 10 predictors"))
+g_a <- do.call("grid.arrange", c(plotList_a, ncol = 5, nrow = 2,
+                               top = "SBC Sensitivity"))
+g_b <- do.call("grid.arrange", c(plotList_b, ncol = 5, nrow = 2,
+                               top = "SBC Specificity"))
+g_w <- do.call("grid.arrange", c(plotList_w, ncol = 4, nrow = 3,
+                               top = "SBC Intercept and 10 predictors"))
+
+
 ```
 
-
-````{r}
-g2 <- cowplot::ggdraw(g) + ggtheme_tufte()
+````{r, fig.fullwidth = TRUE}
+g2 <- cowplot::ggdraw(g_a) + ggtheme_tufte()
 plot(g2)
 
+g3 <- cowplot::ggdraw(g_b) + ggtheme_tufte()
+plot(g3)
+
+g4 <- cowplot::ggdraw(g_w) + ggtheme_tufte()
+plot(g4)
+
 ```
 
-<!-- `r margin_note("")` -->
-<!--
-```{marginfigure}
-<i>Introduction Outline</i>: <br>
-  * Annotation models <br><br>
-  * Latent truths <br><br>
-  * Relate to other field, e.g. cultural consensus theory, medicine <br><br>
-  * Goal of golden standards with uncertainty <br><br>
-  * This provides great benefit over majority voting, see literature <br><br>
-  * Moreover, if we can obtain golden standard labels with appropriate uncertainty this can be a step towards machine learning with appropriate uncertainty in the labels on which we train our models.<br><br>
-  * We start this case study with Model proposed by Dawid and Skene and compare the usage of EM-algorithm (taken from ..) and the Bayesian model (taken from ..).<br><br>
-``` 
--->
+It turns out that now our calibration is systematically off for our classification parameters. If we turn to @talts_validating_2018 we find out that the pattern that is exhibited points towards an under-dispersed Data-Averaged Posterior. That is, our posteriors will on average be narrower than the the true posteriors. This makes sense as the uncertainty we had for $z_i$ was not propagated throughout the model but we created gold standard labels $z^*_i$ without the uncertainty associated with them and used these to get estimates for our classification parameters.
+
+
+<hr>
+
+## Conclusion / Take Home Message
+
+If you have a corpus of annotations do not "clean-up" this data set by producing golden standard labels. If you care about coverage of your parameters, model the classification and annotation jointly and propagate your uncertainty throughout. 
+
+<hr>
+
 
 
 
 ## Session information
+
 ```{r}
 sessionInfo()
 ```
