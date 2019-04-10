@@ -1,0 +1,27 @@
+R version 3.5.1 (2018-07-02)
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+Running under: Windows >= 8 x64 (build 9200)
+
+Matrix products: default
+
+locale:
+[1] LC_COLLATE=Dutch_Netherlands.1252  LC_CTYPE=Dutch_Netherlands.1252    LC_MONETARY=Dutch_Netherlands.1252
+[4] LC_NUMERIC=C                       LC_TIME=Dutch_Netherlands.1252    
+
+attached base packages:
+[1] tcltk     parallel  stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] bayesplot_1.6.0    doParallel_1.0.14  iterators_1.0.10   foreach_1.4.4      rstan_2.18.2      
+[6] StanHeaders_2.18.0 ggplot2_2.2.1.9000
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.0         bindr_0.1.1        pillar_1.3.1       compiler_3.5.1     plyr_1.8.4        
+ [6] prettyunits_1.0.2  base64enc_0.1-3    tools_3.5.1        pkgbuild_1.0.2     tibble_1.4.2      
+[11] gtable_0.2.0       pkgconfig_2.0.2    rlang_0.3.0.1      cli_1.0.1          rstudioapi_0.8    
+[16] yaml_2.2.0         loo_2.0.0          bindrcpp_0.2.2     gridExtra_2.3      withr_2.1.2       
+[21] dplyr_0.7.8        tidyselect_0.2.5   stats4_3.5.1       grid_3.5.1         glue_1.3.0        
+[26] inline_0.3.15      R6_2.3.0           processx_3.2.0     purrr_0.2.5        callr_3.0.0       
+[31] magrittr_1.5       ggridges_0.5.1     scales_1.0.0       ps_1.2.1           codetools_0.2-15  
+[36] matrixStats_0.54.0 assertthat_0.2.0   colorspace_1.3-2   labeling_0.3       lazyeval_0.2.1    
+[41] munsell_0.5.0      crayon_1.3.4      

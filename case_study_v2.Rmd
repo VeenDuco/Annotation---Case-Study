@@ -1,0 +1,95 @@
+---
+title: "..."
+output:
+  tufte::tufte_html:
+    toc: true
+    toc_depth: 3
+    
+citation_package: natbib
+bibliography: ["Annotation Models - project Bob.bib", packages.bib]
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+packages <- c("ggplot2", "gridExtra", "knitr", "reshape", "rstan",
+              "tufte", "cowplot", "bayesplot")
+lapply(packages, library, character.only = TRUE)
+ knitr::write_bib(c(
+   .packages(), packages), 'packages.bib')
+
+options(htmltools.dir.version = FALSE)
+options(digits = 2)
+knitr::opts_chunk$set(echo = FALSE) # hides everything from chunks but output
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(tidy = FALSE, cache.extra = packageVersion('tufte'))
+knitr::opts_chunk$set(comment = "")
+rstan_options(auto_write = TRUE)
+# options(mc.cores = parallel::detectCores(logical = FALSE))
+source("SIMULATIONS/FUNCTIONS/sbc_rank_hist.r")
+source("SIMULATIONS/FUNCTIONS/ggtheme_tufte.r")
+```
+
+
+## Abstract {-}
+Pruning data sets by creating gold standard labels from annotation data is bad methodological practice. When algorithms are trained on gold standard labels instead of annotations, uncertainty in the labels is ignored. The disregard for uncertainty in the outcomes leads to uncalibrated predictions and suboptimal regression coefficients. This holds for both simple regression and composed regressions (aka deep neural networks). We show that the improper calibration can be avoided by building a proper generative model working from predictors to label to annotator responses and then applying Bayesian inference to applied annotator responses to learn about everything else (true labels, annotator accuracy and bias, true regression coefficients). As a case study we use a Bayesian generalization of an algorithm to do supervised learning on annotation data and we use simulation-based calibration to identify issues that arise with the use of gold standard labels as outcomes instead of annotations.
+
+
+
+## Annotation
+Annotation is concerned with eliciting expert or crowdsourced opinion on labels[^1]. This can be done when the true labels[^2] are unknown and annotation can be encountered in many differed fields, for instance, natural language processing [@paun_comparing_2019], sociology (e.g. cultural consensus theory; @oravecz_bayesian_2014), item response theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. It is often considered desirable to determine gold standard labels from annotation data to inform decision making or train algorithms with. Annotation is however a noisy measurement process. Annotators try their best to produce correct labels, but sometimes they make errors or items are ambiguous. This leads to a corpos that contains contradictory annotations for certain items and uncertainty in determining the gold standard. 
+
+Several methods have been proposed to aid the determination of gold standard labels from annotation data. ... majority voting, kappa, etc. ..... Probability based models are found to be superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. .... No matter what procedure is used, by producing gold standard labels we end up with a fallacy in future analysis that these labels do not go with any uncertainty. It would be folly to assume that analysis based on these overconfident labels would be well calibrated. 
+
+
+
+[^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
+[^2]: The true labels is alternatively referred to as true classes, grounded truth, answer key or gold standard.
+
+
+<!-- Annotation is concerned with eliciting expert or crowdsourced opinion on labels.  We can't produce the gold standard labels directly! -->
+
+<!-- Don't capitalize commoun nouns like "natural language processing" -->
+<!-- even if they are fields. -->
+
+<!-- I also wouldn't say "inconsistent labels" so much as try to pitch it as a noisy measurement process.  The annotator tries their best to produce the correct label, but sometimes makes errors or is even just guessing if an answer is required. -->
+
+<!-- If something really has been well established, you don't need to say that "it has been well established that".  So just drop the qualifier and say it. -->
+
+
+
+ - Introduce annotation as eliciting expert / crouwdsourced opinions on labels
+ - Why you would use probibalistic models that produce uncertainty estimates on
+   expert quality and true label
+ - Explain Raykar model and D&S as Raykar with no predictors
+ - In principle any classification can go instead of the simple logistic regression
+ - model is thus extendable to use penalized and / or composed regression that are
+   commontly use in machine learning.
+   
+<!-- Mention that this is a Bayesian generalization of Raykar's model, which reduces to Dawid and Skene's when there are no predictors. -->
+
+
+   
+## simulation-based calibration
+
+ - go through logistic regression example fully..
+ - include explanation of algorithm 2 to cope with correlated samples
+ - use pseude code? or actual r code?
+
+## (im)propper calibration 
+ - because logistic example is done fully the other models can be discussed with 
+   less details on the calibration.
+ - show that annotation and joint model are propperly calibrated
+ 
+ - What do you do by creating gold standard label data set 
+ - What does this do to the calibration of the classification
+ - Was propperly calibrated before and now produces underestimated uncertainty
+ - This in unintentional bias, in contrast to possible choices for alternative 
+   algorithms that use for instance penalization.
+
+## Conclusion
+ - unintentional bias introduced by use of gold standard labels instead of annotations
+ - This can be prevented by building a proper generative model working from predictors 
+   to label to annotator responses and then applying Bayesian inference to applied annotator 
+   responses to learn about everything else (true labels, annotator accuracy and bias, 
+   true regression coefficients).
+   
+

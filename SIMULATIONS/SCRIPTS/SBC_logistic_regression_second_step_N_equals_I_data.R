@@ -5,8 +5,8 @@ library(parallel)
 library(doParallel)
 library(bayesplot)
 library(tcltk)
-model <- stan_model("SIMULATIONs/MODELS/estimation_logistic_step.stan")
-gen_model <- stan_model("SIMULATIONs/MODELS/generation_logistic_step.stan")
+model <- stan_model("SIMULATIONs/MODELS/estimation_logistic_step2.stan")
+gen_model <- stan_model("SIMULATIONs/MODELS/generation_logistic_step2.stan")
 detectCores()
 no_cores <- detectCores() - 2
 cl <- makeCluster(no_cores)
@@ -33,28 +33,24 @@ sbc_rank <- function(ranks, reps, bins, title = NULL){
 }
 
 # get data (structure)
-set.seed(23032019)
+set.seed(10042019)
 sim.data <- list(I = 100,
                  D = 10,
                  x = matrix(rnorm(100 * 10), 100, 10),
-                 I_mis = 0,
-                 ii_mis = c(NA)[-c(1)],
                  ii = 1:100,
                  N = 100)
 
 warm.init <- 1000
-reps <- 200
-bins <- 9
+reps <- 10000
+bins <- 100 # posterior sample size = bins - 1 (L in Talts et al paper.)
 
 prior.sample <- sampling(gen_model, data = list(x = sim.data$x,
                                                 I = sim.data$I,
-                                                I_mis = sim.data$I_mis,
                                                 N = sim.data$N,
                                                 D = sim.data$D,
-                                                ii = sim.data$ii,
-                                                ii_mis = sim.data$ii_mis),
+                                                ii = sim.data$ii),
                          algorithm = "Fixed_param",
-                         seed = 25032019, chains = 1,
+                         seed = 10042019, chains = 1,
                          warmup = 0, iter = reps)
 
 prior.w0 <- extract(prior.sample, pars = "w0")$'w0'
@@ -79,34 +75,30 @@ finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"),
                           }
                           
                           thin <- 1
-                          draws <- bins
+                          draws <- bins - 1
                           warm <- warm.init
                           fit <- sampling(model, chains = 1, warmup = warm, iter = warm + draws, 
                                           data = list(J = sim.data$J,
                                                       I = sim.data$I,
-                                                      I_mis = sim.data$I_mis,
                                                       D = sim.data$D,
                                                       N = sim.data$N,
                                                       x = sim.data$x,
                                                       ii = sim.data$ii,
-                                                      ii_mis = sim.data$ii_mis,
                                                       jj = sim.data$jj,
                                                       y = prior.data[i, ]))
                           
                           
-                          while(min(summary(fit)$summary[, "n_eff"]) < bins) {
+                          while(min(summary(fit)$summary[, "n_eff"]) < (bins - 1)) {
                             thin <- thin * 2
                             draws <- draws * 2
                             warm <- warm * 1.5
                             fit <- sampling(model, chains = 1, warmup = warm, iter = warm + draws, 
                                             data = list(J = sim.data$J,
                                                         I = sim.data$I,
-                                                        I_mis = sim.data$I_mis,
                                                         D = sim.data$D,
                                                         N = sim.data$N,
                                                         x = sim.data$x,
                                                         ii = sim.data$ii,
-                                                        ii_mis = sim.data$ii_mis,
                                                         jj = sim.data$jj,
                                                         y = prior.data[i, ]))
                           }
@@ -115,8 +107,8 @@ finalMatrix  <- foreach(i = 1:reps, .packages = c("rstan", "tcltk"),
                           fit.w0 <- extract(fit, pars = "w0")$'w0'
                           fit.w <- extract(fit, pars = "w")$'w'
                           
-                          fit.w0 <- fit.w0[(1:bins) * thin]
-                          fit.w <- fit.w[(1:bins) * thin, ]
+                          fit.w0 <- fit.w0[(1:(bins - 1)) * thin]
+                          fit.w <- fit.w[(1:(bins - 1)) * thin, ]
                           
                           tempMatrix <- matrix(NA, ncol = (1 + sim.data$D), nrow = 1)
                           
@@ -151,23 +143,25 @@ text(1, 2, paste0("D = ", sim.data$D), pos = 4)
 text(1, 1, paste0("missing = ", sim.data$missing * 100, "%"), pos = 4)
 points(rep(1,4),1:4, pch=15)
 
-sbc_rank(rank.w0, reps = reps, bins = bins + 1, title = "Intercept")
+sbc_rank(rank.w0, reps = reps, bins = bins, title = "Intercept")
 
 for(d in 1:sim.data$D){
-  print(sbc_rank(rank.w[, d], reps = reps, bins = bins + 1, title = paste0("Predictor ", d)))
+  print(sbc_rank(rank.w[, d], reps = reps, bins = bins, title = paste0("Predictor ", d)))
 }
 
 dev.off()
 
 save.image(paste0("SIMULATIONS/RESULTS/IMAGES/logistic_regression_N_equals_I_data", 
                   "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
-                  "missing", sim.data$missing * 100, 
                   "Bins", bins, "replications", reps, ".rdata"))
+
+saveRDS(finalMatrix, paste0("SIMULATIONS/RESULTS/finalMatrixRDS/logistic_regression_N_equals_I_data", 
+                            "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
+                            "Bins", bins, "replications", reps, ".rds"))
 
 writeLines(capture.output(sessionInfo()), 
            paste0("SIMULATIONS/RESULTS/SESSIONINFO/logistic_regression_N_equals_I_data", 
                   "I", sim.data$I, "J", sim.data$J, "D", sim.data$D, 
-                  "missing", sim.data$missing * 100, 
                   "Bins", bins, "replications", reps, ".txt"))
 
 stopCluster(cl)
