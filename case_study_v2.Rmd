@@ -37,28 +37,25 @@ Pruning data sets by creating gold standard labels from annotation data is bad m
 ## Annotation
 Annotation is concerned with eliciting expert or crowdsourced opinion on labels[^1]. This can be done when the true labels[^2] are unknown and annotation can be encountered in many differed fields, for instance, natural language processing [@paun_comparing_2019], sociology (e.g. cultural consensus theory; @oravecz_bayesian_2014), item response theory [@karabatsos_markov_2003], or to produce labels that can be used in supervised learning [@raykar_learning_2010]. It is often considered desirable to determine gold standard labels from annotation data to inform decision making or train algorithms with. Annotation is however a noisy measurement process. Annotators try their best to produce correct labels, but sometimes they make errors or items are ambiguous. This leads to a corpos that contains contradictory annotations for certain items and uncertainty in determining the gold standard. 
 
-Several methods have been proposed to aid the determination of gold standard labels from annotation data. ... majority voting, kappa, etc. ..... Probability based models are found to be superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. .... No matter what procedure is used, by producing gold standard labels we end up with a fallacy in future analysis that these labels do not go with any uncertainty. It would be folly to assume that analysis based on these overconfident labels would be well calibrated. 
+Several methods have been proposed to aid the determination of gold standard labels from annotation data. @passonneau_benefits_2014 make the case that (chance-adjusted) agreement measures do not provide information on what you should actualy care about, annotator abilities and certainty of the true label, given the observed annotations. Probability based models, in contrast, do provide such information. Moreover, probability based models are found to be superior to a simple majority voting scheme to determine the true classes of items [@paun_comparing_2019]. We therefore stick to probability based models to provide information on the gold standard labels. 
 
+Even though probability based models imporove the determination of true classes of items, we should still not use them to produce gold standard labels to replace the annotation data. By producing gold standard labels we end up with a fallacy in future analysis that these labels do not go with any uncertainty. It would be folly to assume that analysis based on overconfident labels would be well calibrated. 
 
+To showcase the calibration issues that arise with the use of gold standard labels as outcomes instead of annotations we perform full Bayesian inference on the model used by @raykar_learning_2010 to do supervised learning on annotation data. In contrast to @raykar_learning_2010, who take point estimates based on posterior modes, we perform full Bayesian inference because we care about the calibration of our full posterior distributions. 
+
+### Joint model
+For simplicity we stick to the binairy case such that we have annotations $y_{ij} \in \{0, 1\}$ for $i \in 1:I$ items and $j \in 1:J$ annotators. All annotators produce one or more annotations for (a subset of) the items so we have a total of $n \in 1:N$ annotations. Each item has a true label $z_i$ for which $Pr[z_i = 1] = logit^{-1}(\pi)$. If the items have associated $D$-dimensional predictor (row) vectors $\textbf{x}_i$ we assume $\pi = w_0 + \textbf{x}_i\textbf{w}$. Alternatively, if there are no associated predictors for the items this reduces to $\pi = w_0$. The joint model 
+
+HERE INTRODUCE RAYKAR ET AL MODEL. BASED ON CONSIDERATION THAT WE WANT TO JOINTLY ESTIMATE TRUE CLASS PROBABILITY AND PREDICTORS FOR THE TRUE CLASSES. 
+
+SOME BACKGROUND THAT THIS REDUCES TO DAWID AND SKENE ANNOTATION MODEL IF WE USE INTERCEPT ONLY. THEN EXPLAIN THAT WE COULD REPLACE THE SIMPLE LOGISTIC REGRESSION WITH PENALIZED REGRESSION OR COMPOSED REGRESSION BASED ON ANY PREFERENCES WE HAVE IN THE BIAS VARIANCE TRADEOFF TO HELP DO PREDICTION WELL. 
 
 [^1]: Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.
 [^2]: The true labels is alternatively referred to as true classes, grounded truth, answer key or gold standard.
 
 
-<!-- Annotation is concerned with eliciting expert or crowdsourced opinion on labels.  We can't produce the gold standard labels directly! -->
-
-<!-- Don't capitalize commoun nouns like "natural language processing" -->
-<!-- even if they are fields. -->
-
-<!-- I also wouldn't say "inconsistent labels" so much as try to pitch it as a noisy measurement process.  The annotator tries their best to produce the correct label, but sometimes makes errors or is even just guessing if an answer is required. -->
-
-<!-- If something really has been well established, you don't need to say that "it has been well established that".  So just drop the qualifier and say it. -->
 
 
-
- - Introduce annotation as eliciting expert / crouwdsourced opinions on labels
- - Why you would use probibalistic models that produce uncertainty estimates on
-   expert quality and true label
  - Explain Raykar model and D&S as Raykar with no predictors
  - In principle any classification can go instead of the simple logistic regression
  - model is thus extendable to use penalized and / or composed regression that are

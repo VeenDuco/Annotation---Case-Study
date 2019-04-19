@@ -49,7 +49,9 @@ if (window.hljs) {
 <div id="TOC">
 <ul>
 <li><a href="#abstract">Abstract</a></li>
-<li><a href="#annotation">Annotation</a></li>
+<li><a href="#annotation">Annotation</a><ul>
+<li><a href="#joint-model">Joint model</a></li>
+</ul></li>
 <li><a href="#simulation-based-calibration">simulation-based calibration</a></li>
 <li><a href="#impropper-calibration">(im)propper calibration</a></li>
 <li><a href="#conclusion">Conclusion</a></li>
@@ -63,20 +65,21 @@ if (window.hljs) {
 <div id="annotation" class="section level2">
 <h2>Annotation</h2>
 <p>Annotation is concerned with eliciting expert or crowdsourced opinion on labels<label for="tufte-sn-1" class="margin-toggle sidenote-number">1</label><input type="checkbox" id="tufte-sn-1" class="margin-toggle"><span class="sidenote"><span class="sidenote-number">1</span> Annotation is alternatively referred to as coding, rating, grading, tagging, or labeling.</span>. This can be done when the true labels<label for="tufte-sn-2" class="margin-toggle sidenote-number">2</label><input type="checkbox" id="tufte-sn-2" class="margin-toggle"><span class="sidenote"><span class="sidenote-number">2</span> The true labels is alternatively referred to as true classes, grounded truth, answer key or gold standard.</span> are unknown and annotation can be encountered in many differed fields, for instance, natural language processing <span class="citation">(Paun et al. 2019)</span>, sociology (e.g. cultural consensus theory; <span class="citation">Oravecz, Vandekerckhove, and Batchelder (2014)</span>), item response theory <span class="citation">(Karabatsos and Batchelder 2003)</span>, or to produce labels that can be used in supervised learning <span class="citation">(Raykar et al. 2010)</span>. It is often considered desirable to determine gold standard labels from annotation data to inform decision making or train algorithms with. Annotation is however a noisy measurement process. Annotators try their best to produce correct labels, but sometimes they make errors or items are ambiguous. This leads to a corpos that contains contradictory annotations for certain items and uncertainty in determining the gold standard.</p>
-<p>Several methods have been proposed to aid the determination of gold standard labels from annotation data. … majority voting, kappa, etc. ….. Probability based models are found to be superior to a simple majority voting scheme to determine the true classes of items <span class="citation">(Paun et al. 2019)</span>. …. No matter what procedure is used, by producing gold standard labels we end up with a fallacy in future analysis that these labels do not go with any uncertainty. It would be folly to assume that analysis based on these overconfident labels would be well calibrated.</p>
-<!-- Annotation is concerned with eliciting expert or crowdsourced opinion on labels.  We can't produce the gold standard labels directly! -->
-<!-- Don't capitalize commoun nouns like "natural language processing" -->
-<!-- even if they are fields. -->
-<!-- I also wouldn't say "inconsistent labels" so much as try to pitch it as a noisy measurement process.  The annotator tries their best to produce the correct label, but sometimes makes errors or is even just guessing if an answer is required. -->
-<!-- If something really has been well established, you don't need to say that "it has been well established that".  So just drop the qualifier and say it. -->
+<p>Several methods have been proposed to aid the determination of gold standard labels from annotation data. <span class="citation">Passonneau and Carpenter (2014)</span> make the case that (chance-adjusted) agreement measures do not provide information on what you should actualy care about, annotator abilities and certainty of the true label, given the observed annotations. Probability based models, in contrast, do provide such information. Moreover, probability based models are found to be superior to a simple majority voting scheme to determine the true classes of items <span class="citation">(Paun et al. 2019)</span>. We therefore stick to probability based models to provide information on the gold standard labels.</p>
+<p>Even though probability based models imporove the determination of true classes of items, we should still not use them to produce gold standard labels to replace the annotation data. By producing gold standard labels we end up with a fallacy in future analysis that these labels do not go with any uncertainty. It would be folly to assume that analysis based on overconfident labels would be well calibrated.</p>
+<p>To showcase the calibration issues that arise with the use of gold standard labels as outcomes instead of annotations we perform full Bayesian inference on the model used by <span class="citation">Raykar et al. (2010)</span> to do supervised learning on annotation data. In contrast to <span class="citation">Raykar et al. (2010)</span>, who take point estimates based on posterior modes, we perform full Bayesian inference because we care about the calibration of our full posterior distributions.</p>
+<div id="joint-model" class="section level3">
+<h3>Joint model</h3>
+<p>For simplicity we stick to the binairy case such that we have annotations <span class="math inline">\(y_{ij} \in \{0, 1\}\)</span> for <span class="math inline">\(i \in 1:I\)</span> items and <span class="math inline">\(j \in 1:J\)</span> annotators. All annotators produce one or more annotations for (a subset of) the items so we have a total of <span class="math inline">\(n \in 1:N\)</span> annotations. Each item has a true label <span class="math inline">\(z_i\)</span> for which <span class="math inline">\(Pr[z_i = 1] = logit^{-1}(\pi)\)</span>. If the items have associated <span class="math inline">\(D\)</span>-dimensional predictor (row) vectors <span class="math inline">\(\textbf{x}_i\)</span> we assume <span class="math inline">\(\pi = w_0 + \textbf{x}_i\textbf{w}\)</span>. Alternatively, if there are no associated predictors for the items this reduces to <span class="math inline">\(\pi = w_0\)</span>. The joint model</p>
+<p>HERE INTRODUCE RAYKAR ET AL MODEL. BASED ON CONSIDERATION THAT WE WANT TO JOINTLY ESTIMATE TRUE CLASS PROBABILITY AND PREDICTORS FOR THE TRUE CLASSES.</p>
+<p>SOME BACKGROUND THAT THIS REDUCES TO DAWID AND SKENE ANNOTATION MODEL IF WE USE INTERCEPT ONLY. THEN EXPLAIN THAT WE COULD REPLACE THE SIMPLE LOGISTIC REGRESSION WITH PENALIZED REGRESSION OR COMPOSED REGRESSION BASED ON ANY PREFERENCES WE HAVE IN THE BIAS VARIANCE TRADEOFF TO HELP DO PREDICTION WELL.</p>
 <ul>
-<li>Introduce annotation as eliciting expert / crouwdsourced opinions on labels</li>
-<li>Why you would use probibalistic models that produce uncertainty estimates on expert quality and true label</li>
 <li>Explain Raykar model and D&amp;S as Raykar with no predictors</li>
 <li>In principle any classification can go instead of the simple logistic regression</li>
 <li>model is thus extendable to use penalized and / or composed regression that are commontly use in machine learning.</li>
 </ul>
 <!-- Mention that this is a Bayesian generalization of Raykar's model, which reduces to Dawid and Skene's when there are no predictors. -->
+</div>
 </div>
 <div id="simulation-based-calibration" class="section level2">
 <h2>simulation-based calibration</h2>
@@ -109,6 +112,9 @@ if (window.hljs) {
 </div>
 <div id="ref-oravecz_bayesian_2014">
 <p>Oravecz, Zita, Joachim Vandekerckhove, and William H Batchelder. 2014. “Bayesian Cultural Consensus Theory.” <em>Field Methods</em> 26 (3): 207–22.</p>
+</div>
+<div id="ref-passonneau_benefits_2014">
+<p>Passonneau, Rebecca J, and Bob Carpenter. 2014. “The Benefits of a Model of Annotation.” <em>Transactions of the Association for Computational Linguistics</em> 2: 311–26.</p>
 </div>
 <div id="ref-paun_comparing_2019">
 <p>Paun, Silviu, Bob Carpenter, Jon Chamberlain, Dirk Hovy, Udo Kruschwitz, and Poesio Massimo. 2019. “Comparing Bayesian Models of Annotation.”</p>
